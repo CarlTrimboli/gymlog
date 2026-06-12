@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gym Log">
+<meta name="theme-color" content="#0d0d0d">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Gym Log</title>
+<style>
+:root{--bg:#0d0d0d;--bg2:#161616;--bg3:#1e1e1e;--border:#2a2a2a;--border2:#444;--text:#f0f0f0;--text2:#888;--text3:#555;--green:#4caf50;--red:#e05c45;--blue:#4a9eda;--gold:#c9a227;--radius:10px;--safe-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overscroll-behavior:none}
+#app{max-width:480px;margin:0 auto;padding-bottom:calc(70px + var(--safe-bottom))}
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--bg2);border-top:1px solid var(--border);display:flex;padding-bottom:var(--safe-bottom);z-index:50}
+.nbtn{flex:1;padding:10px 0 8px;background:none;border:none;color:var(--text3);font-size:9px;letter-spacing:.3px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
+.nbtn.active{color:var(--text)}
+.nbtn svg{width:20px;height:20px}
+.timer-wrap{position:fixed;bottom:calc(62px + var(--safe-bottom));left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:448px;z-index:100;transition:opacity .25s,transform .25s}
+.timer-wrap.hidden{opacity:0;pointer-events:none;transform:translateX(-50%) translateY(10px)}
+.timer-box{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 24px rgba(0,0,0,.6)}
+.tcircle{width:48px;height:48px;border-radius:50%;border:2.5px solid var(--blue);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--blue);flex-shrink:0;transition:border-color .3s,color .3s}
+.tcircle.urgent{border-color:var(--red);color:var(--red)}
+.tcircle.done{border-color:var(--green);color:var(--green)}
+.tprog-bg{flex:1}
+.tprog-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.tprog-label{font-size:11px;color:var(--text2)}
+.tdurs{display:flex;gap:4px}
+.tdur{background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text2);padding:3px 8px;font-size:11px;cursor:pointer;font-family:inherit}
+.tdur.sel{border-color:var(--blue);color:var(--blue)}
+.tbar-bg{height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.tbar-fill{height:4px;border-radius:2px;background:var(--blue);transition:width .95s linear,background .3s}
+.tskip{background:none;border:1px solid var(--border);border-radius:8px;color:var(--text2);padding:8px 12px;font-size:12px;cursor:pointer;font-family:inherit;flex-shrink:0}
+.phead{padding:52px 16px 12px;border-bottom:1px solid var(--border)}
+.phead h1{font-size:26px;font-weight:700;letter-spacing:-.5px}
+.phead p{font-size:13px;color:var(--text2);margin-top:3px}
+.pad{padding:14px 16px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px}
+.cardtap{cursor:pointer}
+.cardtap:active{opacity:.8}
+.divider{height:1px;background:var(--border);margin:12px 0}
+.empty{text-align:center;padding:60px 20px;color:var(--text2);font-size:14px;line-height:1.6}
+.slabel{font-size:11px;letter-spacing:1px;color:var(--text3);text-transform:uppercase;margin-bottom:8px}
+.back-row{display:flex;align-items:center;gap:8px;padding:52px 16px 12px;border-bottom:1px solid var(--border);cursor:pointer}
+.back-row h2{font-size:18px;font-weight:600}
+.toast{position:fixed;bottom:calc(80px + var(--safe-bottom));left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+.badge{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;font-size:13px;font-weight:700;flex-shrink:0}
+.bA,.bA2{background:#2a2000;color:var(--gold)}
+.bB,.bB2{background:#001a2e;color:var(--blue)}
+.bC,.bC2{background:#2a0a00;color:var(--red)}
+.mtag{font-size:11px;padding:2px 8px;background:var(--bg3);border-radius:20px;color:var(--text2);display:inline-block;margin:2px 3px 0 0}
+.ptag{font-size:11px;padding:2px 8px;border-radius:20px}
+.ptA,.ptA2{background:#2a2000;color:var(--gold)}
+.ptB,.ptB2{background:#001a2e;color:var(--blue)}
+.ptC,.ptC2{background:#2a0a00;color:var(--red)}
+.ex-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px}
+.ex-card.alldone{border-color:var(--green)}
+.ex-card.swapped{border-color:var(--blue)}
+.ss-group{border:1px solid var(--blue);border-radius:12px;padding:8px;margin-bottom:14px;background:rgba(74,158,218,.04)}
+.ss-group .ex-card{margin-bottom:8px}
+.ss-group .ex-card:last-child{margin-bottom:0}
+.ss-head{display:flex;align-items:center;gap:8px;padding:2px 4px 8px}
+.ss-badge{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--blue);background:#001a2e;padding:3px 8px;border-radius:6px}
+.ss-note{font-size:11px;color:var(--text2)}
+.ss-pick-row{display:flex;align-items:center;gap:8px;margin:8px 0 2px;flex-wrap:wrap}
+.ss-pick-lbl{font-size:11px;color:var(--blue)}
+.ss-select{background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-family:inherit;font-size:12px;padding:5px 8px;cursor:pointer;max-width:100%}
+.set-row{display:grid;grid-template-columns:24px 1fr 1fr 36px;gap:8px;align-items:center;margin-top:8px}
+.snum{font-size:11px;color:var(--text3);text-align:center}
+.scheck{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--border2);background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;flex-shrink:0}
+.scheck.done{background:var(--green);border-color:var(--green)}
+.snote-row{display:grid;grid-template-columns:24px 1fr;gap:8px;margin-top:5px}
+.snote{font-size:12px;padding:6px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;width:100%}
+.snote:focus{outline:none;border-color:var(--border2)}
+.snote::placeholder{color:var(--text3)}
+.pbval{font-size:11px;color:var(--green);margin-top:2px}
+.ntext{font-size:11px;color:var(--text3);margin-top:2px}
+.last-box{margin:8px 0 4px;padding:8px 10px;background:var(--bg3);border-radius:8px;border-left:2px solid var(--border2)}
+.last-lbl{font-size:10px;letter-spacing:.5px;color:var(--text3);margin-bottom:5px;text-transform:uppercase}
+.last-sets{display:flex;flex-wrap:wrap;gap:5px}
+.lchip{font-size:12px;padding:3px 8px;background:var(--bg2);border-radius:6px;color:var(--text2)}
+.pbar-wrap{height:3px;background:var(--border);border-radius:2px;margin:10px 0 0}
+.pbar-fill{height:3px;border-radius:2px;background:var(--green);transition:width .3s}
+.btn{border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:600;transition:opacity .15s}
+.btn:active{opacity:.75}
+.btn-p{background:var(--text);color:var(--bg);padding:14px;font-size:15px;width:100%;display:block;margin-top:8px}
+.btn-icon{background:var(--bg3);border:1px solid var(--border);color:var(--text2);width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer}
+input[type=number],input[type=text]{background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 10px;font-family:inherit;font-size:15px;width:100%;text-align:center;-moz-appearance:textfield}
+input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none}
+input:focus{outline:none;border-color:var(--border2)}
+.hcard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px}
+.hex{font-size:12px;color:var(--text2);margin-top:6px}
+.schip{display:inline-block;font-size:11px;padding:2px 7px;background:var(--bg3);border-radius:4px;margin:2px 2px 0 0;color:var(--text2)}
+.srow{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.sbox{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 12px;text-align:center}
+.sval{font-size:24px;font-weight:700}
+.slbl2{font-size:11px;color:var(--text2);margin-top:3px}
+.fbar-bg{height:4px;background:var(--border);border-radius:2px;margin-top:6px}
+.fbar{height:4px;border-radius:2px;transition:width .4s}
+.pbrow{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+.food-search-wrap{position:relative;margin-bottom:10px}
+.food-search-input{width:100%;padding:12px 44px 12px 14px;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:inherit;font-size:14px;text-align:left}
+.food-search-input:focus{outline:none;border-color:var(--blue)}
+.food-search-input::placeholder{color:var(--text3)}
+.search-spinner{position:absolute;right:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;display:none}
+.search-spinner.show{display:block}
+@keyframes spin{to{transform:translateY(-50%) rotate(360deg)}}
+.food-result{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-top:10px}
+.food-log-item{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.fdel{background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:0 4px;line-height:1}
+.saved-chip{display:inline-flex;align-items:center;padding:5px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;font-size:12px;color:var(--text2);cursor:pointer;margin:3px}
+.saved-chip:active{opacity:.7}
+.mbar-bg{height:5px;background:var(--border);border-radius:3px;margin-top:4px}
+.mbar-fill{height:5px;border-radius:3px}
+.stitle{font-size:13px;font-weight:600;margin:12px 0 8px}
+.info-box{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-top:12px}
+.info-box.blue{border-left:3px solid var(--blue)}
+.info-box.green{border-left:3px solid var(--green)}
+/* ── SWAP DRAWER ── */
+.swap-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;opacity:0;pointer-events:none;transition:opacity .25s;max-width:480px;left:50%;transform:translateX(-50%)}
+.swap-overlay.open{opacity:1;pointer-events:all}
+.swap-drawer{position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);width:100%;max-width:480px;background:var(--bg2);border-radius:18px 18px 0 0;border-top:1px solid var(--border2);z-index:201;transition:transform .3s ease;padding-bottom:var(--safe-bottom)}
+.swap-drawer.open{transform:translateX(-50%) translateY(0)}
+.drawer-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:12px auto 0}
+.drawer-head{padding:14px 16px 10px;border-bottom:1px solid var(--border)}
+.drawer-title{font-size:15px;font-weight:600}
+.drawer-sub{font-size:11px;color:var(--text3);margin-top:3px}
+.swap-option{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--border);cursor:pointer}
+.swap-option:active{background:var(--bg3)}
+.swap-opt-body{flex:1;min-width:0}
+.swap-opt-name{font-size:14px;font-weight:500}
+.swap-opt-note{font-size:11px;color:var(--text2);margin-top:2px}
+.stag{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;margin-top:4px}
+.stag-same{background:#0a2e0a;color:var(--green)}
+.stag-angle{background:#001a2e;color:var(--blue)}
+.stag-harder{background:#2a1a00;color:var(--gold)}
+.stag-easier{background:#1a1a1a;color:var(--text2)}
+.swap-cancel{width:100%;padding:14px;background:none;border:none;color:var(--text2);font-family:inherit;font-size:14px;cursor:pointer}
+.swapped-tag{font-size:10px;color:var(--blue);background:#001a2e;padding:2px 8px;border-radius:20px;display:inline-block;margin-top:2px}
+.swap-btn{background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--blue);font-size:11px;padding:5px 10px;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0}
+.swap-btn:active{opacity:.7}
+/* ── READINESS CHECK-IN ── */
+.ready-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:14px}
+.ready-q{font-size:12px;color:var(--text2);margin:10px 0 6px}
+.ready-q:first-of-type{margin-top:2px}
+.ready-opts{display:flex;gap:6px}
+.ready-opt{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text2);padding:9px 0;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;text-align:center}
+.ready-opt.sel{border-color:var(--blue);color:var(--blue);background:rgba(74,158,218,0.08)}
+.ready-result{display:flex;align-items:center;gap:12px}
+.ready-score{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;flex-shrink:0;border:2px solid}
+.ready-full{border-color:var(--green);color:var(--green)}
+.ready-mod{border-color:var(--gold);color:var(--gold)}
+.ready-rest{border-color:var(--red);color:var(--red)}
+.ready-edit{background:none;border:none;color:var(--text3);font-size:11px;cursor:pointer;font-family:inherit;text-decoration:underline;padding:0;margin-top:6px}
+.mod-banner{background:rgba(201,162,39,0.1);border:1px solid var(--gold);border-radius:var(--radius);padding:10px 12px;font-size:12px;color:var(--gold);margin-bottom:14px;line-height:1.5}
+.mod-suggest{font-size:11px;color:var(--gold);margin-top:4px}
+/* ── INSIGHTS ── */
+.insight{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:var(--radius);padding:10px 12px;font-size:12px;color:var(--text2);margin-bottom:8px;line-height:1.5}
+.insight.low{border-left-color:var(--red)}
+.insight.strong{border-left-color:var(--green)}
+/* ── OUTCOME SHEET ── */
+.outcome-sheet{position:fixed;bottom:0;left:0;right:0;margin:0 auto;transform:translateY(100%);width:100%;max-width:480px;background:var(--bg2);border-radius:18px 18px 0 0;border-top:1px solid var(--border2);z-index:201;transition:transform .3s ease;padding:18px 16px calc(18px + var(--safe-bottom))}
+.outcome-sheet.open{transform:translateY(0)}
+.outcome-btn{display:flex;align-items:center;gap:12px;width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);padding:14px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:8px;text-align:left}
+.outcome-btn span{font-size:22px}
+.outcome-skip{display:block;width:100%;background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;font-family:inherit;padding:8px;text-align:center}
+/* ── TIMER-END FLASH (iOS has no vibrate — visual alert instead) ── */
+.flash-overlay{position:fixed;inset:0;z-index:300;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,transparent 40%,rgba(74,158,218,0.55) 100%)}
+.flash-overlay.go{animation:flashPulse 0.5s ease-in-out 3}
+@keyframes flashPulse{0%,100%{opacity:0}50%{opacity:1}}
+.tauto{font-size:10px;color:var(--text3);margin-left:6px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+<div class="timer-wrap hidden" id="timerWrap">
+  <div class="timer-box">
+    <div class="tcircle" id="tcircle">1:30</div>
+    <div class="tprog-bg">
+      <div class="tprog-top">
+        <span class="tprog-label">Rest timer<span class="tauto" id="tauto"></span></span>
+        <div class="tdurs">
+          <button class="tdur sel" onclick="setDur(90)">90s</button>
+          <button class="tdur" onclick="setDur(120)">2m</button>
+          <button class="tdur" onclick="setDur(180)">3m</button>
+          <button class="tdur" onclick="setDur(240)">4m</button>
+        </div>
+      </div>
+      <div class="tbar-bg"><div class="tbar-fill" id="tbarFill" style="width:100%"></div></div>
+    </div>
+    <button class="tskip" onclick="stopTimer()">Skip</button>
+  </div>
+</div>
+<!-- TIMER-END VISUAL FLASH -->
+<div class="flash-overlay" id="flashOverlay"></div>
+<!-- SESSION OUTCOME SHEET -->
+<div class="swap-overlay" id="outcomeOverlay" onclick="saveSessionWithOutcome(null)"></div>
+<div class="outcome-sheet" id="outcomeSheet">
+  <div style="font-size:15px;font-weight:600;margin-bottom:4px">How was the session?</div>
+  <div style="font-size:11px;color:var(--text3);margin-bottom:14px">One tap — builds your energy pattern history</div>
+  <button class="outcome-btn" onclick="saveSessionWithOutcome('strong')"><span>&#128170;</span>Strong</button>
+  <button class="outcome-btn" onclick="saveSessionWithOutcome('average')"><span>&#128528;</span>Average</button>
+  <button class="outcome-btn" onclick="saveSessionWithOutcome('low')"><span>&#128564;</span>Low energy</button>
+  <button class="outcome-skip" onclick="saveSessionWithOutcome(null)">Skip — save without tag</button>
+</div>
+<!-- SWAP DRAWER (single, reused for all exercises) -->
+<div class="swap-overlay" id="swapOverlay" onclick="closeSwapDrawer()"></div>
+<div class="swap-drawer" id="swapDrawer">
+  <div class="drawer-handle"></div>
+  <div class="drawer-head">
+    <div class="drawer-title" id="drawerTitle">Swap exercise</div>
+    <div class="drawer-sub" id="drawerSub"></div>
+  </div>
+  <div id="drawerOptions"></div>
+  <button class="swap-cancel" onclick="closeSwapDrawer()">Cancel</button>
+</div>
+<nav class="bnav">
+  <button class="nbtn active" id="nav-start" onclick="goTab('start')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5,3 19,12 5,21"/></svg>Start
+  </button>
+  <button class="nbtn" id="nav-history" onclick="goTab('history')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12h8M8 8h8M8 16h5"/></svg>History
+  </button>
+  <button class="nbtn" id="nav-progress" onclick="goTab('progress')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>Progress
+  </button>
+  <button class="nbtn" id="nav-nutrition" onclick="goTab('nutrition')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>Nutrition
+  </button>
+</nav>
+<script>
+// ── ROUTINES ──
+const R = [
+  {id:"A",type:"Chest + Back",muscles:["Chest","Back"],focus:"Flat press · vertical pull · compound rows",pairs:"A2",
+   ex:[
+    {n:"Machine Bench Press",s:4,r:"10-12",m:"Chest",note:"Flat — primary horizontal press"},
+    {n:"Lat Pull Down",s:4,r:"10-12",m:"Back",note:"Overhead vertical pull"},
+    {n:"Wide Cheat Press",s:3,r:"10-12",m:"Chest",note:"Wide grip flat — different chest emphasis"},
+    {n:"T-Bar Rows",s:4,r:"9-10",m:"Back",note:"Bent-over compound row"},
+    {n:"Incline Machine",s:3,r:"10-12",m:"Chest",note:"Incline — upper chest angle"},
+    {n:"Low Row Machine",s:3,r:"10-12",m:"Back",note:"Seated low horizontal pull"},
+  ]},
+  {id:"A2",type:"Chest + Back",muscles:["Chest","Back"],focus:"Incline fly · cable pull · unilateral row",pairs:"A",
+   ex:[
+    {n:"Dumbbell Incline Bench Press",s:4,r:"9-11",m:"Chest",note:"Incline — vs flat on A"},
+    {n:"Cable Pulldown",s:4,r:"11-12",m:"Back",note:"Cable overhead — vs machine on A"},
+    {n:"Dumbbell Incline Fly",s:3,r:"10-12",m:"Chest",note:"Fly arc — different to pressing"},
+    {n:"Seated Cable Rows",s:4,r:"10-12",m:"Back",note:"Cable tension — vs T-Bar on A"},
+    {n:"Peck Dec",s:3,r:"10-12",m:"Chest",note:"Horizontal fly — isolation arc"},
+    {n:"One Arm Kneeling Cable Row",s:3,r:"10",m:"Back",note:"Unilateral — vs bilateral on A"},
+  ]},
+  {id:"B",type:"Shoulders + Arms",muscles:["Shoulders","Biceps","Triceps"],focus:"Overhead press · heavy curls · top tricep volume",pairs:"B2",
+   ex:[
+    {n:"Seated Shoulder Press Machine",s:4,r:"8-10",m:"Shoulders",note:"Vertical overhead press"},
+    {n:"Cable Tri Ext",s:4,r:"12-15",m:"Triceps",note:"Overhead cable — #1 volume exercise"},
+    {n:"Alternating Hammer Curl w/ DB",s:4,r:"8-10",m:"Biceps",note:"Neutral grip — top bicep move"},
+    {n:"Dumbbell Lateral Raise",s:3,r:"10-12",m:"Shoulders",note:"Medial delt isolation"},
+    {n:"Seated Dip",s:3,r:"12-14",m:"Triceps",note:"Bodyweight — 93 sets logged"},
+    {n:"Biceps Curl with Dumbbell",s:3,r:"10-12",m:"Biceps",note:"Supinated — complements hammer"},
+  ]},
+  {id:"B2",type:"Shoulders + Arms",muscles:["Shoulders","Biceps","Triceps"],focus:"Rear delt · incline curl · pushdown",pairs:"B",
+   ex:[
+    {n:"Dumbbell Lateral Raise",s:3,r:"10-12",m:"Shoulders",note:"Medial — primary opener"},
+    {n:"Triceps with Rope and Cable",s:4,r:"12-15",m:"Triceps",note:"Pushdown — vs overhead on B"},
+    {n:"Alternating Incline Curl w/ DB",s:4,r:"10-12",m:"Biceps",note:"Incline stretch — vs hammer on B"},
+    {n:"Rear Lateral Cable Raise",s:3,r:"10-12",m:"Shoulders",note:"Rear delt — not hit on B"},
+    {n:"Bicep Cable Curl",s:3,r:"10-12",m:"Biceps",note:"Cable tension — vs free weight on B"},
+    {n:"Reverse Fly Machine",s:3,r:"10-12",m:"Shoulders",note:"Rear delt machine — posterior focus"},
+  ]},
+  {id:"C",type:"Legs",muscles:["Quads","Hamstrings","Glutes","Calves"],focus:"Bilateral squat · quad isolation · calf raise",pairs:"C2",
+   ex:[
+    {n:"Smith Machine Squat",s:4,r:"8-10",m:"Quads/Glutes",note:"Bilateral squat — primary compound"},
+    {n:"Leg Extensions",s:4,r:"10-12",m:"Quads",note:"Knee extension — 111 sets logged"},
+    {n:"Standing Leg Curls",s:4,r:"10-12",m:"Hamstrings",note:"Standing curl — 95 sets logged"},
+    {n:"Hip Thrust",s:3,r:"10-12",m:"Glutes",note:"Hip extension — posterior chain"},
+    {n:"Thigh Adductor",s:3,r:"10-12",m:"Inner Thigh",note:"Adduction"},
+    {n:"Rear Kick Back Machine",s:3,r:"12-14",m:"Glutes",note:"Glute isolation finisher"},
+    {n:"Seated Calf Raise",s:3,r:"15-20",m:"Calves",note:"Soleus — knee bent · swap → Standing",ssMover:true},
+  ]},
+  {id:"C2",type:"Legs",muscles:["Quads","Hamstrings","Glutes","Calves"],focus:"Hack squat · hamstring curl · calf raise",pairs:"C",
+   ex:[
+    {n:"Hack Squat Machine",s:4,r:"8-10",m:"Quads",note:"Machine squat — vs Smith on C · swap → Pendulum"},
+    {n:"DB Split Lunges",s:3,r:"10 each",m:"Quads/Glutes",note:"Unilateral — vs bilateral on C"},
+    {n:"Standing Leg Curls",s:4,r:"10-12",m:"Hamstrings",note:"Knee flexion — fixes hamstring gap vs C"},
+    {n:"Leg Extensions",s:3,r:"15-20",m:"Quads",note:"Higher rep pump set"},
+    {n:"One Legged Cable Kickback",s:3,r:"12",m:"Glutes",note:"Cable tension — vs machine on C"},
+    {n:"Thigh Abductor",s:3,r:"10-12",m:"Outer Thigh",note:"Abduction — complements adductor"},
+    {n:"Seated Calf Raise",s:3,r:"15-20",m:"Calves",note:"Soleus — knee bent · swap → Standing",ssMover:true},
+  ]},
+];
+
+// ── SWAP DATA ──
+// Each key is the original exercise name. swaps[] are the options.
+// type: "same" | "angle" | "harder" | "easier"
+const SWAPS = {
+  "Machine Bench Press":[
+    {name:"Barbell Bench Press",note:"More stabiliser demand — free bar flat",type:"same"},
+    {name:"Dumbbell Bench Press",note:"Greater ROM, unilateral correction",type:"same"},
+    {name:"Smith Machine Bench",note:"Fixed path — good if fatigued",type:"same"},
+    {name:"Cable Chest Press",note:"Constant tension through full ROM",type:"angle"},
+  ],
+  "Lat Pull Down":[
+    {name:"Wide Grip Pull-Up",note:"Bodyweight vertical — harder progression",type:"harder"},
+    {name:"Straight Arm Pulldown",note:"Longer lat arc under tension",type:"angle"},
+    {name:"Assisted Pull-Up Machine",note:"Same pattern, reduced load",type:"easier"},
+  ],
+  "Wide Cheat Press":[
+    {name:"Wide Grip Barbell Press",note:"Free weight equivalent of wide grip flat",type:"same"},
+    {name:"Cable Chest Press",note:"Constant tension through full ROM",type:"angle"},
+    {name:"Wide Push-Up",note:"Bodyweight — good as a warm-up swap",type:"easier"},
+  ],
+  "T-Bar Rows":[
+    {name:"Barbell Bent-Over Row",note:"Free weight version — same hip hinge",type:"same"},
+    {name:"Chest-Supported Row Machine",note:"Removes spinal erector fatigue",type:"easier"},
+    {name:"Meadows Row",note:"Landmine unilateral — high lat stretch",type:"harder"},
+  ],
+  "Incline Machine":[
+    {name:"Incline Barbell Press",note:"Classic upper chest compound",type:"same"},
+    {name:"Incline Dumbbell Press",note:"More ROM at top of movement",type:"same"},
+    {name:"High Cable Fly",note:"Upper chest from cables — great stretch at bottom",type:"angle"},
+  ],
+  "Low Row Machine":[
+    {name:"Seated Cable Row (close grip)",note:"Same horizontal pull with cable tension",type:"same"},
+    {name:"Dumbbell Single-Arm Row",note:"Unilateral — higher ROM on each rep",type:"same"},
+    {name:"Resistance Band Row",note:"Low load option if machine unavailable",type:"easier"},
+  ],
+  "Dumbbell Incline Bench Press":[
+    {name:"Incline Barbell Press",note:"Heavier load potential, less stabiliser demand",type:"same"},
+    {name:"Incline Smith Press",note:"Fixed path — good when fatigued",type:"same"},
+    {name:"Incline Cable Press",note:"Constant tension version of incline press",type:"angle"},
+  ],
+  "Cable Pulldown":[
+    {name:"Neutral Grip Lat Pulldown",note:"Slightly different elbow path, same muscle",type:"same"},
+    {name:"Underhand Pulldown",note:"More bicep involvement, different lat emphasis",type:"angle"},
+    {name:"Machine Lat Pulldown",note:"Swap back to A-style if cable is taken",type:"same"},
+  ],
+  "Dumbbell Incline Fly":[
+    {name:"High-to-Low Cable Fly",note:"Cable keeps tension throughout fly arc",type:"same"},
+    {name:"Low Cable Incline Fly",note:"Emphasises stretch at bottom of arc",type:"angle"},
+    {name:"Incline Machine Fly",note:"Machine version if dumbbells unavailable",type:"same"},
+  ],
+  "Seated Cable Rows":[
+    {name:"Wide Grip Cable Row",note:"Hits upper back / rear delt more",type:"angle"},
+    {name:"Machine Row (neutral grip)",note:"Same horizontal pull, fixed path",type:"same"},
+    {name:"Inverted Row",note:"Bodyweight horizontal row — scalable via angle",type:"easier"},
+  ],
+  "Peck Dec":[
+    {name:"Cable Crossover (mid)",note:"Cable version of horizontal fly arc",type:"same"},
+    {name:"Dumbbell Flat Fly",note:"Free weight — slightly different resistance curve",type:"same"},
+    {name:"Single Cable Chest Fly",note:"Unilateral — good for symmetry correction",type:"same"},
+  ],
+  "One Arm Kneeling Cable Row":[
+    {name:"Single Arm DB Row",note:"Classic unilateral row — high ROM",type:"same"},
+    {name:"Half-Kneeling Cable Row",note:"More core stability demand",type:"same"},
+    {name:"Banded Single-Arm Row",note:"Band version if cables taken",type:"easier"},
+  ],
+  "Seated Shoulder Press Machine":[
+    {name:"Seated DB Shoulder Press",note:"Free weight version — more stabiliser demand",type:"same"},
+    {name:"Barbell OHP (seated)",note:"Heavier loading potential",type:"same"},
+    {name:"Arnold Press",note:"Rotational press — hits all three delt heads",type:"angle"},
+  ],
+  "Cable Tri Ext":[
+    {name:"DB Overhead Tricep Extension",note:"Same overhead long-head stretch",type:"same"},
+    {name:"EZ Bar Skull Crusher",note:"Lying version — different elbow angle",type:"angle"},
+    {name:"Overhead Cable (EZ bar)",note:"Subtle grip change on same movement",type:"same"},
+  ],
+  "Alternating Hammer Curl w/ DB":[
+    {name:"Rope Hammer Curl",note:"Cable version — constant tension",type:"same"},
+    {name:"Cross-Body Hammer Curl",note:"Different elbow path — brachialis focus",type:"angle"},
+    {name:"Neutral Grip EZ Bar Curl",note:"Bilateral neutral grip version",type:"same"},
+  ],
+  "Dumbbell Lateral Raise":[
+    {name:"Cable Lateral Raise",note:"Constant tension throughout the arc",type:"same"},
+    {name:"Machine Lateral Raise",note:"Fixed path — easier to isolate",type:"same"},
+    {name:"Leaning Lateral Raise",note:"Better stretch at bottom — more ROM",type:"harder"},
+  ],
+  "Seated Dip":[
+    {name:"Bench Dip",note:"Same bodyweight press — load with plate",type:"same"},
+    {name:"Tricep Pushdown (bar)",note:"Cable version — different elbow path",type:"angle"},
+    {name:"Close Grip Push-Up",note:"Bodyweight if dip station unavailable",type:"easier"},
+  ],
+  "Biceps Curl with Dumbbell":[
+    {name:"EZ Bar Curl",note:"Slightly supinated — eases wrist pressure",type:"same"},
+    {name:"Barbell Curl",note:"Full supination with bilateral loading",type:"same"},
+    {name:"Cable Curl (bar)",note:"Constant tension through top of movement",type:"same"},
+  ],
+  "Triceps with Rope and Cable":[
+    {name:"V-Bar Pushdown",note:"Different grip — more medial head focus",type:"same"},
+    {name:"Reverse Grip Pushdown",note:"Lateral head shifts more load",type:"angle"},
+    {name:"Band Pushdown",note:"Band version if cable taken",type:"easier"},
+  ],
+  "Alternating Incline Curl w/ DB":[
+    {name:"Spider Curl",note:"Prone incline — peak contraction emphasis",type:"angle"},
+    {name:"Low Cable Curl",note:"Similar stretch position, constant tension",type:"angle"},
+    {name:"Seated DB Curl (upright)",note:"Less stretch, easier starting point",type:"easier"},
+  ],
+  "Rear Lateral Cable Raise":[
+    {name:"Face Pull",note:"Rear delt + external rotation — excellent swap",type:"same"},
+    {name:"Bent-Over DB Rear Fly",note:"Free weight version at same angle",type:"same"},
+    {name:"Reverse Peck Dec",note:"Machine version of rear delt fly",type:"same"},
+  ],
+  "Bicep Cable Curl":[
+    {name:"Preacher Curl Machine",note:"Fixed elbow — excellent peak isolation",type:"angle"},
+    {name:"Concentration Curl",note:"Single arm, seated — strict form",type:"angle"},
+    {name:"Reverse Curl",note:"Pronated grip — brachialis + brachioradialis",type:"angle"},
+  ],
+  "Reverse Fly Machine":[
+    {name:"Cable Rear Fly (crossover)",note:"Same arc with cable tension",type:"same"},
+    {name:"Bent-Over Lateral Raise",note:"Free weight version — more control needed",type:"same"},
+    {name:"Face Pull (wide)",note:"Higher elbow path — more upper trap",type:"angle"},
+  ],
+  "Smith Machine Squat":[
+    {name:"Barbell Back Squat",note:"Free bar — more core and stabiliser demand",type:"same"},
+    {name:"Leg Press (close stance)",note:"Quad emphasis without balance demand",type:"easier"},
+    {name:"Goblet Squat",note:"Good form drill if lower back fatigued",type:"easier"},
+  ],
+  "Leg Extensions":[
+    {name:"Spanish Squat (band)",note:"Isometric terminal extension variation",type:"angle"},
+    {name:"Wall Sit + Pulse",note:"Bodyweight quad hold",type:"easier"},
+    {name:"Sissy Squat",note:"Bodyweight — extreme knee-over-toe quad load",type:"harder"},
+  ],
+  "Standing Leg Curls":[
+    {name:"Lying Leg Curl",note:"Classic bilateral version on machine",type:"same"},
+    {name:"Nordic Curl",note:"Eccentric-focused — very high hamstring stimulus",type:"harder"},
+    {name:"Swiss Ball Curl",note:"Bodyweight hip extension + knee flexion",type:"same"},
+  ],
+  "Hip Thrust":[
+    {name:"Barbell Hip Thrust",note:"Heavier load, same movement pattern",type:"same"},
+    {name:"Cable Pull-Through",note:"Hip hinge with cable — great glute feel",type:"same"},
+    {name:"Glute Bridge",note:"Floor version — less ROM at top",type:"easier"},
+  ],
+  "Thigh Adductor":[
+    {name:"Cable Hip Adduction",note:"Cable version — more standing stability",type:"same"},
+    {name:"Side-Lying Hip Adduction",note:"Bodyweight, good for warm-up",type:"easier"},
+    {name:"Sumo Squat",note:"Compound adductor load under more tension",type:"angle"},
+  ],
+  "Rear Kick Back Machine":[
+    {name:"Cable Kickback",note:"Same hip extension pattern with cable",type:"same"},
+    {name:"Donkey Kick (band)",note:"Band version — bodyweight version available",type:"same"},
+    {name:"Romanian Deadlift",note:"Compound shift — glute + hamstring",type:"harder"},
+  ],
+  "Hack Squat Machine":[
+    {name:"Super Pendulum Squat",note:"Free-arc squat — unique pattern, was a C2 staple",type:"same"},
+    {name:"V-Squat Machine",note:"Similar load pattern, different leverage",type:"same"},
+    {name:"Front Squat",note:"Free bar version — high quad emphasis",type:"harder"},
+    {name:"Leg Press (shoulder width)",note:"Similar quad recruitment, less balance",type:"easier"},
+  ],
+  "DB Split Lunges":[
+    {name:"Bulgarian Split Squat",note:"Rear foot elevated — more glute stretch",type:"same"},
+    {name:"Walking Lunges",note:"Dynamic version — higher heart rate",type:"same"},
+    {name:"Reverse Lunge",note:"Less knee shear than forward lunge",type:"easier"},
+  ],
+  "One Legged Cable Kickback":[
+    {name:"Single Leg Hip Thrust",note:"Unilateral glute — more load potential",type:"same"},
+    {name:"Band Glute Kickback",note:"Band version if cable is busy",type:"easier"},
+    {name:"Step-Up (glute focus)",note:"Hip extension as a step pattern",type:"angle"},
+  ],
+  "Thigh Abductor":[
+    {name:"Side-Lying Abduction (band)",note:"Bodyweight band version",type:"same"},
+    {name:"Cable Hip Abduction",note:"Standing cable — more glute med activation",type:"same"},
+    {name:"Lateral Band Walk",note:"Warm-up level abduction work",type:"easier"},
+  ],
+  "Seated Calf Raise":[
+    {name:"Standing Calf Raise",note:"Knee straight — shifts emphasis to gastrocnemius",type:"angle"},
+    {name:"Leg Press Calf Raise",note:"Higher load potential on the press sled",type:"same"},
+    {name:"Smith Machine Calf Raise",note:"Fixed bar path — easy to load heavy",type:"same"},
+  ],
+};
+
+const STAG_LABEL = {same:"same angle",angle:"angle shift",harder:"harder",easier:"easier"};
+const STAG_CLASS = {same:"stag-same",angle:"stag-angle",harder:"stag-harder",easier:"stag-easier"};
+
+const ORDER = ["A","B","C","A2","B2","C2"];
+const ACC = {A:"#c9a227",A2:"#c9a227",B:"#4a9eda",B2:"#4a9eda",C:"#e05c45",C2:"#e05c45"};
+
+// ── NUTRITION ──
+const NUT = {
+  build:{
+    A:  {cal:2650,p:195,c:310,f:75,note:"High compound volume"},
+    A2: {cal:2650,p:195,c:310,f:75,note:"High compound volume"},
+    B:  {cal:2500,p:195,c:285,f:72,note:"Moderate volume"},
+    B2: {cal:2500,p:195,c:285,f:72,note:"Moderate volume"},
+    C:  {cal:2750,p:195,c:325,f:78,note:"Highest calorie burn"},
+    C2: {cal:2750,p:195,c:325,f:78,note:"Highest calorie burn"},
+    rest:{cal:2200,p:185,c:245,f:70,note:"Recovery maintenance"},
+  },
+  cut:{
+    A:  {cal:2100,p:215,c:170,f:63,note:"Fuelled for session"},
+    A2: {cal:2100,p:215,c:170,f:63,note:"Fuelled for session"},
+    B:  {cal:1950,p:215,c:155,f:60,note:"Moderate deficit"},
+    B2: {cal:1950,p:215,c:155,f:60,note:"Moderate deficit"},
+    C:  {cal:2200,p:220,c:185,f:63,note:"Most calories — highest burn"},
+    C2: {cal:2200,p:220,c:185,f:63,note:"Most calories — highest burn"},
+    rest:{cal:1750,p:210,c:130,f:58,note:"Largest deficit"},
+  }
+};
+
+// ── STATE ──
+let S = {tab:"start",view:"pick",session:null,data:{},logs:[],swaps:{},ssPartner:null};
+// S.swaps: { [exerciseIndex]: { originalName, swappedName } }
+let nutMode = "build";
+let nutView = "log";
+let foodLog = [];
+let savedMeals = [];
+let pendingFood = null;
+// Readiness check-in (per day). readiness = {sleep,energy,sore,score,rec} | null
+let readiness = null;
+let readyDraft = {sleep:0,energy:0,sore:null};
+let pendingSession = null; // session data held while outcome sheet is open
+
+// ── STORAGE ──
+function loadStorage(){
+  try { S.logs = JSON.parse(localStorage.getItem("gl3") || "[]"); } catch(e){ S.logs=[]; }
+  try { nutMode = localStorage.getItem("nutMode") || "build"; } catch(e){}
+  try { savedMeals = JSON.parse(localStorage.getItem("savedMeals") || "[]"); } catch(e){ savedMeals=[]; }
+  try { readiness = JSON.parse(localStorage.getItem("ready_" + new Date().toDateString()) || "null"); } catch(e){ readiness=null; }
+  loadFoodLog();
+}
+function loadFoodLog(){
+  try { foodLog = JSON.parse(localStorage.getItem("fl_" + new Date().toDateString()) || "[]"); } catch(e){ foodLog=[]; }
+}
+function saveWorkouts(){
+  try{ localStorage.setItem("gl3", JSON.stringify(S.logs)); }catch(e){}
+  try{
+    const ab={version:1,exportDate:new Date().toISOString(),logs:S.logs,savedMeals:savedMeals};
+    localStorage.setItem("gl3_autobak", JSON.stringify(ab));
+    localStorage.setItem("gl3_autobak_date", new Date().toISOString());
+  }catch(e){}
+}
+function saveFoodLog(){ try{ localStorage.setItem("fl_" + new Date().toDateString(), JSON.stringify(foodLog)); }catch(e){} }
+function saveSavedMeals(){ try{ localStorage.setItem("savedMeals", JSON.stringify(savedMeals)); }catch(e){} }
+function saveNutMode(){ try{ localStorage.setItem("nutMode", nutMode); }catch(e){} }
+
+// ── NAV ──
+function goTab(t){
+  if(pendingSession) saveSessionWithOutcome(null); // never lose a finished session
+  S.tab=t; S.view="pick"; S.session=null;
+  document.querySelectorAll(".nbtn").forEach(b=>b.classList.remove("active"));
+  document.getElementById("nav-"+t).classList.add("active");
+  render();
+}
+
+// ── READINESS CHECK-IN ──
+// Score = sleep(1-5) + energy(1-5) − 2 if joint soreness. Range 0–10.
+// ≥8 Full · 5–7 Modified (−15–20% loads) · ≤4 Rest
+function computeReadiness(sleep,energy,sore){
+  const score=sleep+energy-(sore?2:0);
+  const rec=score>=8?"full":(score>=5?"modified":"rest");
+  return {sleep,energy,sore,score,rec};
+}
+function setReadyDraft(f,v){ readyDraft[f]=v; render(); }
+function submitReadiness(){
+  if(!readyDraft.sleep||!readyDraft.energy||readyDraft.sore===null){ toast("Answer all 3 questions"); return; }
+  readiness=computeReadiness(readyDraft.sleep,readyDraft.energy,readyDraft.sore);
+  try{ localStorage.setItem("ready_"+new Date().toDateString(), JSON.stringify(readiness)); }catch(e){}
+  render();
+}
+function editReadiness(){
+  readyDraft={sleep:readiness.sleep,energy:readiness.energy,sore:readiness.sore};
+  readiness=null;
+  try{ localStorage.removeItem("ready_"+new Date().toDateString()); }catch(e){}
+  render();
+}
+const READY_META={
+  full:{cls:"ready-full",title:"Full session",desc:"Green light — run the session as planned."},
+  modified:{cls:"ready-mod",title:"Modified session",desc:"Reduce loads 15–20% today. Suggested weights are shown on each exercise."},
+  rest:{cls:"ready-rest",title:"Rest day recommended",desc:"Low readiness — recovery will likely return more than training today."}
+};
+// Suggested reduced load range for modified days (−20% to −15%), rounded to 0.5kg
+function reducedRange(kg){
+  const v=parseFloat(kg); if(isNaN(v)||v<=0) return null;
+  const lo=Math.round(v*0.80*2)/2, hi=Math.round(v*0.85*2)/2;
+  return {lo,hi};
+}
+function readinessCard(){
+  if(readiness){
+    const m=READY_META[readiness.rec];
+    return '<div class="ready-card"><div class="ready-result">'
+      +'<div class="ready-score '+m.cls+'">'+readiness.score+'</div>'
+      +'<div style="flex:1"><div style="font-size:14px;font-weight:600">'+m.title+'</div>'
+      +'<div style="font-size:12px;color:var(--text2);margin-top:2px;line-height:1.4">'+m.desc+'</div>'
+      +'<button class="ready-edit" onclick="editReadiness()">Edit check-in</button></div>'
+      +'</div></div>';
+  }
+  const opt=(f,v,lbl)=>'<button class="ready-opt'+(readyDraft[f]===v?' sel':'')+'" onclick="setReadyDraft(\''+f+'\','+v+')">'+lbl+'</button>';
+  return '<div class="ready-card">'
+    +'<div style="font-size:14px;font-weight:600">Morning check-in</div>'
+    +'<div class="ready-q">Sleep quality</div><div class="ready-opts">'+[1,2,3,4,5].map(v=>opt("sleep",v,v)).join("")+'</div>'
+    +'<div class="ready-q">Energy level</div><div class="ready-opts">'+[1,2,3,4,5].map(v=>opt("energy",v,v)).join("")+'</div>'
+    +'<div class="ready-q">Joint soreness?</div><div class="ready-opts">'+opt("sore",false,"No")+opt("sore",true,"Yes")+'</div>'
+    +'<button class="btn btn-p" style="margin-top:12px" onclick="submitReadiness()">Get recommendation</button>'
+    +'</div>';
+}
+
+// ── SMART REST TIMER ──
+// Keyword classification so swapped exercises inherit the right rest automatically.
+const COMPOUND_RE=/press|row|pull|squat|lunge|deadlift|thrust|dip/i;
+function classifyRest(name){
+  return COMPOUND_RE.test(name)?{secs:180,label:"compound"}:{secs:90,label:"isolation"};
+}
+function smartTimer(ei){
+  const c=classifyRest(getActiveName(ei));
+  tTotal=c.secs;
+  const la=document.getElementById("tauto");
+  if(la) la.textContent="· auto: "+c.label+" "+(c.secs>=120?(c.secs/60)+"m":c.secs+"s");
+  syncDurButtons(c.secs);
+  startTimer();
+}
+function syncDurButtons(secs){
+  const labels={90:"90s",120:"2m",180:"3m",240:"4m"};
+  document.querySelectorAll(".tdur").forEach(b=>b.classList.toggle("sel",b.textContent===labels[secs]));
+}
+function flashAlert(){
+  const f=document.getElementById("flashOverlay");
+  if(f){ f.classList.remove("go"); void f.offsetWidth; f.classList.add("go"); }
+  try{ if(navigator.vibrate) navigator.vibrate([300,150,300,150,300]); }catch(e){}
+}
+
+// ── OUTCOME PATTERN DETECTION ──
+// Groups tagged sessions by weekday AND routine over the last 60 days.
+// Identical groups (the Monday≡A confound) are merged into one labelled insight.
+function getInsights(){
+  const cutoff=Date.now()-60*86400000;
+  const tagged=S.logs.filter(l=>l.outcome&&new Date(l.date).getTime()>=cutoff);
+  if(tagged.length<6) return [];
+  const groups={};
+  tagged.forEach(l=>{
+    const wd=new Date(l.date).toLocaleDateString("en-AU",{weekday:"long"});
+    (groups["d:"+wd]=groups["d:"+wd]||{label:wd,ses:[]}).ses.push(l);
+    (groups["r:"+l.routineId]=groups["r:"+l.routineId]||{label:l.routineId+" sessions",ses:[]}).ses.push(l);
+  });
+  // Merge groups whose recent sessions are identical (day/routine confound)
+  const bySig={};
+  Object.values(groups).forEach(g=>{
+    if(g.ses.length<4) return;
+    const recent=g.ses.slice(0,6); // S.logs is newest-first
+    const sig=recent.map(l=>l.id).join(",");
+    if(bySig[sig]) bySig[sig].labels.push(g.label);
+    else bySig[sig]={labels:[g.label],recent};
+  });
+  const out=[];
+  Object.values(bySig).forEach(({labels,recent})=>{
+    const label=labels.join(" / ");
+    const low=recent.filter(l=>l.outcome==="low").length;
+    const strong=recent.filter(l=>l.outcome==="strong").length;
+    const thresh=Math.ceil(recent.length*0.6);
+    if(low>=thresh) out.push({type:"low",msg:low+" of your last "+recent.length+" "+label+" sessions were low energy — consider pre-emptive load reduction or extra carbs the night before."});
+    else if(strong>=thresh) out.push({type:"strong",msg:strong+" of your last "+recent.length+" "+label+" sessions were strong — good slot for progression attempts."});
+  });
+  return out.slice(0,3);
+}
+function insightsHtml(){
+  const ins=getInsights();
+  if(!ins.length) return "";
+  return '<div class="slabel" style="margin-top:14px">Patterns</div>'
+    +ins.map(i=>'<div class="insight '+i.type+'">'+i.msg+'</div>').join("");
+}
+
+// ── SESSION ──
+function startSession(id){
+  if(readiness&&readiness.rec==="rest"&&!confirm("Readiness suggests a rest day. Start anyway?")) return;
+  const r=R.find(x=>x.id===id);
+  S.session=id; S.data={}; S.swaps={}; S.ssPartner=defaultSSIndex(id);
+  r.ex.forEach((e,i)=>{ S.data[i]=Array.from({length:e.s},()=>({kg:"",reps:"",note:"",done:false})); });
+  S.view="session"; render(); window.scrollTo(0,0);
+}
+function upd(ei,si,f,v){ S.data[ei][si][f]=v; }
+function addSet(ei){ S.data[ei].push({kg:"",reps:"",note:"",done:false}); render(); }
+function remSet(ei){ if(S.data[ei].length>1){ S.data[ei].pop(); render(); } }
+function tickSet(ei,si){
+  const s=S.data[ei][si]; s.done=!s.done;
+  render();
+  if(s.done) setTimeout(()=>smartTimer(ei),50);
+}
+
+// ── SWAP LOGIC ──
+// Returns the name actually being tracked for a given exercise index
+function getActiveName(ei){
+  return S.swaps[ei] ? S.swaps[ei].swappedName : R.find(x=>x.id===S.session).ex[ei].n;
+}
+
+// ── CALF SUPERSET (dynamic, user-chosen partner) ──
+const SS_DEFAULT={C:"Hip Thrust",C2:"Thigh Abductor"};
+function defaultSSIndex(id){
+  const r=R.find(x=>x.id===id); if(!r) return null;
+  const n=SS_DEFAULT[id]; if(!n) return null;
+  const i=r.ex.findIndex(e=>e.n===n); return i>=0?i:null;
+}
+// Returns display order with the ssMover (calf) moved directly after the chosen partner
+function ssLayout(r){
+  const moverIdx=r.ex.findIndex(e=>e.ssMover);
+  let order=r.ex.map((_,i)=>i), pairWith=-1;
+  if(moverIdx>=0 && S.ssPartner!=null && S.ssPartner!==moverIdx && S.ssPartner<r.ex.length && !r.ex[S.ssPartner].ssMover){
+    pairWith=S.ssPartner;
+    order=order.filter(i=>i!==moverIdx);
+    order.splice(order.indexOf(pairWith)+1,0,moverIdx);
+  }
+  return {order,moverIdx,pairWith};
+}
+function setSSPartner(v){ S.ssPartner=(v===""||v==null)?null:parseInt(v,10); render(); }
+function ssPickerHtml(ei,r){
+  const opts=r.ex.map((e,i)=> i===ei?'':'<option value="'+i+'"'+(S.ssPartner===i?' selected':'')+'>'+getActiveName(i)+'</option>').join('');
+  return '<div class="ss-pick-row"><span class="ss-pick-lbl">⇄ Superset with</span>'
+    +'<select class="ss-select" onchange="setSSPartner(this.value)">'
+    +'<option value=""'+(S.ssPartner==null?' selected':'')+'>— none —</option>'+opts
+    +'</select></div>';
+}
+
+function openSwapDrawer(ei){
+  const r=R.find(x=>x.id===S.session);
+  const ex=r.ex[ei];
+  const originalName=ex.n;
+  const currentName=getActiveName(ei);
+  const options=SWAPS[originalName]||[];
+
+  document.getElementById("drawerTitle").textContent="Swap: "+currentName;
+  document.getElementById("drawerSub").textContent=ex.m+" · "+ex.note;
+
+  let html="";
+  if(S.swaps[ei]){
+    html+='<div class="swap-option" onclick="revertSwap('+ei+')" style="border-left:3px solid var(--red)">'
+      +'<div class="swap-opt-body">'
+        +'<div class="swap-opt-name" style="color:var(--red)">↩ Revert to '+originalName+'</div>'
+        +'<div class="swap-opt-note">Remove swap and restore original</div>'
+      +'</div></div>';
+  }
+  if(options.length===0){
+    html+='<div style="padding:20px 16px;font-size:13px;color:var(--text3)">No swap options defined for this exercise yet.</div>';
+  } else {
+    html+=options.map((sw,idx)=>{
+      const isCurrent=sw.name===currentName;
+      return '<div class="swap-option'+(isCurrent?" selected":"")+'" onclick="applySwap('+ei+','+idx+')" style="'+(isCurrent?"opacity:.5;pointer-events:none":"")+'">'
+        +'<div class="swap-opt-body">'
+          +'<div class="swap-opt-name">'+sw.name+(isCurrent?" ✓":"")+'</div>'
+          +'<div class="swap-opt-note">'+sw.note+'</div>'
+          +'<span class="stag '+STAG_CLASS[sw.type]+'">'+STAG_LABEL[sw.type]+'</span>'
+        +'</div>'
+        +'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2"><polyline points="9,18 15,12 9,6"/></svg>'
+      +'</div>';
+    }).join("");
+  }
+  document.getElementById("drawerOptions").innerHTML=html;
+
+  // Store ei for applySwap
+  document.getElementById("swapDrawer").dataset.ei=ei;
+  document.getElementById("swapOverlay").classList.add("open");
+  document.getElementById("swapDrawer").classList.add("open");
+}
+
+function closeSwapDrawer(){
+  document.getElementById("swapOverlay").classList.remove("open");
+  document.getElementById("swapDrawer").classList.remove("open");
+}
+
+function applySwap(ei,optionIdx){
+  const r=R.find(x=>x.id===S.session);
+  const originalName=r.ex[ei].n;
+  const sw=SWAPS[originalName][optionIdx];
+  S.swaps[ei]={originalName:originalName,swappedName:sw.name};
+  closeSwapDrawer();
+  toast("Swapped to: "+sw.name);
+  render();
+}
+
+function revertSwap(ei){
+  delete S.swaps[ei];
+  closeSwapDrawer();
+  toast("Reverted to original");
+  render();
+}
+
+function finish(){
+  // Build the session record now, hold it while the outcome sheet is open
+  const r=R.find(x=>x.id===S.session);
+  const exs=r.ex.map((e,i)=>{
+    const activeName=getActiveName(i);
+    const isSwapped=!!S.swaps[i];
+    const originalName=isSwapped?S.swaps[i].originalName:null;
+    return {
+      name:activeName,
+      muscle:e.m,
+      swapped:isSwapped,
+      originalName:originalName,
+      sets:S.data[i].filter(s=>s.done||s.kg||s.reps).map(s=>({kg:s.kg||"0",reps:s.reps||"0",note:s.note||"",done:s.done}))
+    };
+  }).filter(e=>e.sets.length);
+  pendingSession={id:Date.now(),routineId:S.session,routineType:r.type,date:new Date().toISOString(),exercises:exs};
+  document.getElementById("outcomeOverlay").classList.add("open");
+  document.getElementById("outcomeSheet").classList.add("open");
+}
+function saveSessionWithOutcome(tag){
+  document.getElementById("outcomeOverlay").classList.remove("open");
+  document.getElementById("outcomeSheet").classList.remove("open");
+  if(!pendingSession) return;
+  pendingSession.outcome=tag||null;
+  // Stamp readiness so plateau detection can tell intentional reductions from genuine stalls
+  pendingSession.readiness=readiness?{score:readiness.score,rec:readiness.rec,sleep:readiness.sleep,energy:readiness.energy,sore:readiness.sore}:null;
+  pendingSession.loadReduced=!!(readiness&&readiness.rec==="modified");
+  S.logs.unshift(pendingSession);
+  pendingSession=null;
+  saveWorkouts(); toast("Session saved!"); S.view="pick"; S.session=null; S.swaps={}; stopTimer(); render();
+}
+
+// ── TIMER ──
+let tInterval=null, tTotal=90, tLeft=90;
+let audioCtx=null;
+function getAudio(){ if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state==="suspended") audioCtx.resume(); return audioCtx; }
+document.addEventListener("touchstart",()=>{try{getAudio();}catch(e){}},{once:true});
+document.addEventListener("click",()=>{try{getAudio();}catch(e){}},{once:true});
+
+function startTimer(){
+  if(tInterval){clearInterval(tInterval);tInterval=null;}
+  tLeft=tTotal;
+  const w=document.getElementById("timerWrap"); if(w) w.classList.remove("hidden");
+  updateTimerDisplay();
+  tInterval=setInterval(()=>{
+    tLeft--;
+    updateTimerDisplay();
+    if(tLeft<=0){
+      clearInterval(tInterval); tInterval=null;
+      beep(); flashAlert();
+      const c=document.getElementById("tcircle");
+      if(c){c.className="tcircle done";c.textContent="Done!";}
+      setTimeout(stopTimer,2000);
+    }
+  },1000);
+}
+function stopTimer(){
+  if(tInterval){clearInterval(tInterval);tInterval=null;}
+  const w=document.getElementById("timerWrap"); if(w) w.classList.add("hidden");
+}
+function updateTimerDisplay(){
+  const c=document.getElementById("tcircle"), f=document.getElementById("tbarFill");
+  if(!c||!f) return;
+  const m=Math.floor(tLeft/60), s=tLeft%60;
+  c.textContent=m+":"+(s<10?"0"+s:s);
+  c.className="tcircle"+(tLeft<=10?" urgent":"");
+  f.style.width=Math.max(0,(tLeft/tTotal)*100)+"%";
+  f.style.background=tLeft<=10?"#e05c45":"#4a9eda";
+}
+function setDur(secs){
+  tTotal=secs; tLeft=secs;
+  syncDurButtons(secs);
+  const la=document.getElementById("tauto"); if(la) la.textContent="";
+  if(tInterval){clearInterval(tInterval);tInterval=null;startTimer();}
+  else updateTimerDisplay();
+}
+function beep(){
+  try{
+    const a=getAudio();
+    [0,0.25,0.5].forEach(off=>{
+      const o=a.createOscillator(), g=a.createGain();
+      o.connect(g); g.connect(a.destination);
+      o.frequency.value=880; o.type="sine";
+      g.gain.setValueAtTime(0,a.currentTime+off);
+      g.gain.linearRampToValueAtTime(0.4,a.currentTime+off+0.02);
+      g.gain.exponentialRampToValueAtTime(0.001,a.currentTime+off+0.2);
+      o.start(a.currentTime+off); o.stop(a.currentTime+off+0.2);
+    });
+  }catch(e){}
+}
+
+// ── HELPERS ──
+function getNext(){
+  if(!S.logs.length) return R[0];
+  const idx=ORDER.indexOf(S.logs[0].routineId);
+  return R.find(r=>r.id===ORDER[(idx+1)%ORDER.length]);
+}
+
+// getPB: checks the active name AND, if the exercise was swapped, also checks the
+// original name (alias pool) so PB continuity is maintained across swaps.
+function getPB(name){
+  let b=0;
+  // Build alias pool: names that are aliased to this exercise via swap data
+  const pool=new Set([name]);
+  // If this name is an original, include all its swap names
+  if(SWAPS[name]) SWAPS[name].forEach(sw=>pool.add(sw.name));
+  // If this name is a swap target, find its original(s)
+  Object.keys(SWAPS).forEach(orig=>{
+    SWAPS[orig].forEach(sw=>{ if(sw.name===name) pool.add(orig); });
+  });
+  S.logs.forEach(l=>l.exercises.forEach(e=>{
+    if(pool.has(e.name)) e.sets.forEach(s=>{const v=parseFloat(s.kg);if(!isNaN(v)&&v>b)b=v;});
+  }));
+  return b;
+}
+
+// getLastSets: searches by active name first, then by original if swapped
+function getLastSets(rid,name){
+  // Build alias pool same as getPB
+  const pool=new Set([name]);
+  if(SWAPS[name]) SWAPS[name].forEach(sw=>pool.add(sw.name));
+  Object.keys(SWAPS).forEach(orig=>{
+    SWAPS[orig].forEach(sw=>{ if(sw.name===name) pool.add(orig); });
+  });
+  const l=S.logs.find(l=>l.routineId===rid&&l.exercises.some(e=>pool.has(e.name)));
+  if(!l) return null;
+  const e=l.exercises.find(e=>pool.has(e.name));
+  return e&&e.sets.length?{date:l.date,sets:e.sets,loggedName:e.name}:null;
+}
+
+function streak(){
+  if(!S.logs.length) return 0;
+  let n=0, p=new Date(); p.setHours(0,0,0,0);
+  for(const l of S.logs){ const d=new Date(l.date); d.setHours(0,0,0,0); if(Math.round((p-d)/86400000)<=1){n++;p=d;}else break; }
+  return n;
+}
+function fdate(iso){ return new Date(iso).toLocaleDateString("en-AU",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}); }
+function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2000); }
+function mbar(val,max,color){ return '<div class="mbar-bg"><div class="mbar-fill" style="width:'+Math.min(100,Math.round(val/max*100))+'%;height:5px;border-radius:3px;background:'+color+'"></div></div>'; }
+function getTodayRid(){
+  if(!S.logs.length) return "rest";
+  const l=S.logs[0];
+  return new Date(l.date).toDateString()===new Date().toDateString()?l.routineId:"rest";
+}
+function getFoodTotals(){ return foodLog.reduce((a,f)=>({cal:a.cal+f.cal,p:a.p+f.p,c:a.c+f.c,f:a.f+f.f}),{cal:0,p:0,c:0,f:0}); }
+
+// ── NUTRITION ACTIONS ──
+function setNutMode(m){ nutMode=m; saveNutMode(); render(); }
+function setNutView(v){ nutView=v; pendingFood=null; render(); }
+function removeFoodItem(idx){ foodLog.splice(idx,1); saveFoodLog(); render(); }
+function addSavedMeal(idx){ const m={...savedMeals[idx],id:Date.now()}; foodLog.push(m); saveFoodLog(); nutView="log"; toast("Added: "+m.name); render(); }
+function removeSavedMeal(idx){ savedMeals.splice(idx,1); saveSavedMeals(); render(); }
+function addPendingFood(){ if(!pendingFood) return; foodLog.push({...pendingFood,id:Date.now()}); saveFoodLog(); pendingFood=null; nutView="log"; render(); }
+function savePendingMeal(){
+  if(!pendingFood) return;
+  if(!savedMeals.find(m=>m.name===pendingFood.name)){ savedMeals.push(pendingFood); saveSavedMeals(); toast("Saved to favourites!"); }
+  else toast("Already saved!");
+}
+
+async function searchFood(){
+  const q=document.getElementById("fq").value.trim();
+  const g=document.getElementById("fg").value.trim();
+  if(!q){ toast("Enter a food to search"); return; }
+  const spin=document.getElementById("fspin");
+  const res=document.getElementById("fres");
+  if(spin) spin.classList.add("show");
+  if(res) res.innerHTML="";
+  try{
+    const portionStr=g?" (portion: "+g+"g)":"";
+    const prompt="You are a nutrition database. For the food item \""+q+portionStr+"\", return ONLY a valid JSON object with these exact keys: name (string), cal (integer), p (integer protein grams), c (integer carb grams), f (integer fat grams), portion (string), confidence (high/medium/low). Assume standard serving if no portion given. Return ONLY the JSON with no other text, no markdown.";
+    const response=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        model:"claude-sonnet-4-20250514",
+        max_tokens:300,
+        tools:[{type:"web_search_20250305",name:"web_search"}],
+        messages:[{role:"user",content:prompt}]
+      })
+    });
+    const data=await response.json();
+    const text=data.content.filter(b=>b.type==="text").map(b=>b.text).join("");
+    const clean=text.replace(/```json|```/g,"").trim();
+    const food=JSON.parse(clean);
+    pendingFood=food;
+    const confColor=food.confidence==="high"?"var(--green)":food.confidence==="medium"?"var(--gold)":"var(--red)";
+    if(res) res.innerHTML=
+      '<div class="food-result">'+
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start">'+
+          '<div style="flex:1;font-size:14px;font-weight:600">'+food.name+'</div>'+
+          '<div style="font-size:20px;font-weight:700;color:var(--green);margin-left:8px">'+food.cal+' kcal</div>'+
+        '</div>'+
+        '<div style="font-size:11px;color:'+confColor+';margin-top:2px">Confidence: '+food.confidence+' &middot; '+food.portion+'</div>'+
+        '<div style="display:flex;gap:12px;margin-top:8px;font-size:13px;color:var(--text2)">'+
+          '<span>Protein: '+food.p+'g</span>'+
+          '<span>Carbs: '+food.c+'g</span>'+
+          '<span>Fat: '+food.f+'g</span>'+
+        '</div>'+
+        '<div style="display:flex;gap:8px;margin-top:12px">'+
+          '<button onclick="addPendingFood()" style="flex:1;padding:10px;background:var(--green);color:#000;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">+ Add to log</button>'+
+          '<button onclick="savePendingMeal()" style="padding:10px 14px;background:var(--bg3);color:var(--text2);border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;cursor:pointer">Star Save</button>'+
+        '</div>'+
+      '</div>';
+  }catch(e){
+    if(res) res.innerHTML='<div style="color:var(--red);font-size:13px;padding:10px 0">Could not find data. Try being more specific, e.g. "200g grilled chicken breast"</div>';
+  }
+  if(spin) spin.classList.remove("show");
+}
+
+// ── RENDER ──
+function render(){
+  const app=document.getElementById("app");
+  if(S.tab==="start") app.innerHTML=S.view==="session"?renderSession():renderPick();
+  else if(S.tab==="history") app.innerHTML=renderHistory();
+  else if(S.tab==="nutrition") app.innerHTML=renderNutrition();
+  else app.innerHTML=renderProgress();
+  checkSundayReminder();
+}
+
+function getLastBackupDays(){
+  try{
+    const d=localStorage.getItem("gl3_lastexport");
+    if(!d) return null;
+    return Math.floor((new Date()-new Date(d))/86400000);
+  }catch(e){ return null; }
+}
+
+function checkSundayReminder(){
+  if(new Date().getDay()!==0) return;
+  if(!S.logs.length) return;
+  const shownToday=localStorage.getItem("sunday_reminder_shown");
+  if(shownToday===new Date().toDateString()) return;
+  localStorage.setItem("sunday_reminder_shown", new Date().toDateString());
+  setTimeout(()=>{
+    const existing=document.getElementById("sunday-banner");
+    if(existing) return;
+    const banner=document.createElement("div");
+    banner.id="sunday-banner";
+    banner.style.cssText="position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--blue);color:#000;padding:14px 16px;z-index:999;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 12px rgba(0,0,0,.4)";
+    banner.innerHTML='<div><div style="font-size:13px;font-weight:700">Sunday backup reminder</div><div style="font-size:12px;opacity:.8;margin-top:2px">Protect your training data</div></div>'
+      +'<div style="display:flex;gap:8px">'
+        +'<button onclick="exportData();document.getElementById(\'sunday-banner\').remove()" style="padding:8px 14px;background:#000;color:var(--blue);border:none;border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Backup now</button>'
+        +'<button onclick="document.getElementById(\'sunday-banner\').remove()" style="padding:8px 10px;background:rgba(0,0,0,.2);color:#000;border:none;border-radius:8px;font-family:inherit;font-size:12px;cursor:pointer">Later</button>'
+      +'</div>';
+    document.body.appendChild(banner);
+  }, 800);
+}
+
+function rCard(r){
+  return '<div class="card cardtap" onclick="startSession(\''+r.id+'\')">'
+    +'<div style="display:flex;align-items:center;gap:12px">'
+      +'<div class="badge b'+r.id+'">'+r.id+'</div>'
+      +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:15px;font-weight:600">'+r.type+'</div>'
+        +'<div style="font-size:12px;color:var(--text2);margin-top:1px">'+r.focus+'</div>'
+      +'</div>'
+      +'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2"><polyline points="9,18 15,12 9,6"/></svg>'
+    +'</div>'
+    +'<div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap">'
+      +r.muscles.map(m=>'<span class="mtag">'+m+'</span>').join("")
+      +'<span style="margin-left:auto;font-size:11px;color:var(--text3)">Pairs with '+r.pairs+'</span>'
+    +'</div></div>';
+}
+
+function renderPick(){
+  const next=getNext();
+  return '<div class="phead"><h1>Gym Log</h1><p>A / B / C alternating split</p></div>'
+    +'<div class="pad">'
+    +readinessCard()
+    +insightsHtml()
+    +'<div class="slabel" style="margin-top:14px">Suggested next</div>'+rCard(next)
+    +'<div class="divider"></div>'
+    +'<div class="slabel" style="margin-top:14px">All routines</div>'
+    +R.map(r=>rCard(r)).join("")
+    +'</div>';
+}
+
+function renderSession(){
+  const r=R.find(x=>x.id===S.session);
+  const tot=Object.values(S.data).reduce((a,s)=>a+s.length,0);
+  const don=Object.values(S.data).reduce((a,s)=>a+s.filter(x=>x.done).length,0);
+  const pct=tot?Math.round(don/tot*100):0;
+  const acc=ACC[r.id];
+  const cardHtmls=r.ex.map((ex,ei)=>{
+    const sets=S.data[ei]||[];
+    const allDone=sets.length&&sets.every(s=>s.done);
+    const isSwapped=!!S.swaps[ei];
+    const activeName=getActiveName(ei);
+    const pb=getPB(activeName);
+    const ls=getLastSets(S.session,activeName);
+    let lastHtml='<div style="font-size:11px;color:var(--text3);margin:6px 0 2px">First time — no previous data</div>';
+    if(ls){
+      const showAlias=ls.loggedName&&ls.loggedName!==activeName;
+      lastHtml='<div class="last-box">'
+        +'<div class="last-lbl">Last session &middot; '+new Date(ls.date).toLocaleDateString("en-AU",{day:"numeric",month:"short"})+(showAlias?' &middot; logged as '+ls.loggedName:'')+'</div>'
+        +'<div class="last-sets">'+ls.sets.map(s=>'<span class="lchip">'+s.kg+'kg &times; '+s.reps+(s.note?' &middot; '+s.note:'')+'</span>').join("")+'</div>';
+      if(readiness&&readiness.rec==="modified"){
+        const top=Math.max(...ls.sets.map(s=>parseFloat(s.kg)||0));
+        const rr=reducedRange(top);
+        if(rr) lastHtml+='<div class="mod-suggest">&#9888; Modified day &mdash; suggested top set '+rr.lo+'&ndash;'+rr.hi+'kg (&minus;15&ndash;20%)</div>';
+      }
+      lastHtml+='</div>';
+    }
+    let setsHtml=sets.map((s,si)=>
+      '<div>'
+      +'<div class="set-row">'
+        +'<div class="snum">'+(si+1)+'</div>'
+        +'<input type="number" placeholder="kg" value="'+s.kg+'" oninput="upd('+ei+','+si+',\'kg\',this.value)" inputmode="decimal">'
+        +'<input type="number" placeholder="reps" value="'+s.reps+'" oninput="upd('+ei+','+si+',\'reps\',this.value)" inputmode="numeric">'
+        +'<button class="scheck'+(s.done?' done':'')+'" onclick="tickSet('+ei+','+si+')">'
+          +(s.done?'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg>':'')
+        +'</button>'
+      +'</div>'
+      +'<div class="snote-row"><div></div>'
+        +'<input type="text" placeholder="Note for this set..." value="'+(s.note||'')+'" oninput="upd('+ei+','+si+',\'note\',this.value)" class="snote">'
+      +'</div>'
+      +'</div>'
+    ).join("");
+    return '<div class="ex-card'+(allDone?' alldone':isSwapped?' swapped':'')+'">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'
+        +'<div style="flex:1;min-width:0">'
+          +'<div style="font-size:15px;font-weight:600">'+activeName+'</div>'
+          +(isSwapped?'<div class="swapped-tag">⇄ swapped from '+ex.n+'</div>':'')
+          +'<div style="font-size:12px;color:var(--text2);margin-top:'+(isSwapped?'3':'1')+'px">'+ex.m+'</div>'
+          +'<div class="ntext">'+ex.note+'</div>'
+          +(pb>0?'<div class="pbval">PB: '+pb+'kg</div>':'')
+          +(ex.ssMover?ssPickerHtml(ei,r):'')
+        +'</div>'
+        +'<div style="display:flex;align-items:center;gap:5px;margin-left:8px;flex-wrap:wrap;justify-content:flex-end">'
+          +'<button class="swap-btn" onclick="openSwapDrawer('+ei+')">⇄ Swap</button>'
+          +'<button class="btn-icon" onclick="remSet('+ei+')">&#8722;</button>'
+          +'<span style="font-size:12px;color:var(--text2);min-width:14px;text-align:center">'+sets.length+'</span>'
+          +'<button class="btn-icon" onclick="addSet('+ei+')">+</button>'
+        +'</div>'
+      +'</div>'
+      +lastHtml
+      +'<div style="font-size:11px;color:var(--text3);margin:6px 0 2px">Target: '+ex.s+' x '+ex.r+'</div>'
+      +setsHtml
+    +'</div>';
+  });
+  // Dynamic superset: the calf (ssMover) is bracketed with the user-chosen partner
+  const {order,moverIdx,pairWith}=ssLayout(r);
+  let cards='';
+  for(let k=0;k<order.length;k++){
+    const idx=order[k];
+    if(pairWith>=0 && idx===pairWith){
+      cards+='<div class="ss-group"><div class="ss-head"><span class="ss-badge">SUPERSET</span><span class="ss-note">Alternate sets · one rest per round</span></div>'
+        +cardHtmls[pairWith]+cardHtmls[moverIdx]+'</div>';
+      k++; // skip the mover (sits directly after the partner in order)
+    } else {
+      cards+=cardHtmls[idx];
+    }
+  }
+  return '<div class="back-row" onclick="if(confirm(\'Exit? Progress will be lost.\')){S.view=\'pick\';S.swaps={};stopTimer();render();}">'
+    +'<span style="font-size:22px;color:var(--text2)">&#8249;</span>'
+    +'<h2>'+r.type+' &mdash; '+r.id+'</h2></div>'
+    +'<div class="pad">'
+    +(readiness&&readiness.rec==="modified"?'<div class="mod-banner"><b>Modified session</b> &mdash; readiness '+readiness.score+'/10. Loads reduced 15&ndash;20% today; this won\'t count against progression tracking.</div>':'')
+    +'<div class="card" style="margin-bottom:14px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center">'
+        +'<div><div style="font-size:13px;color:var(--text2)">'+don+' / '+tot+' sets complete</div>'
+        +'<div style="font-size:12px;color:var(--text3);margin-top:2px">'+r.focus+'</div></div>'
+        +'<div style="font-size:22px;font-weight:700;color:'+acc+'">'+pct+'%</div>'
+      +'</div>'
+      +'<div class="pbar-wrap"><div class="pbar-fill" style="width:'+pct+'%;background:'+acc+'"></div></div>'
+    +'</div>'
+    +cards
+    +'<button class="btn btn-p" onclick="finish()">Save session</button>'
+    +'</div>';
+}
+
+function renderHistory(){
+  if(!S.logs.length) return '<div class="phead"><h1>History</h1><p>All past sessions</p></div><div class="empty">No sessions yet.<br>Complete a workout to see it here.</div>';
+  const cards=S.logs.map(l=>{
+    const tot=l.exercises.reduce((a,e)=>a+e.sets.length,0);
+    const vol=l.exercises.reduce((a,e)=>a+e.sets.reduce((b,s)=>b+(parseFloat(s.kg)||0)*(parseFloat(s.reps)||0),0),0);
+    return '<div class="hcard">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'
+        +'<div style="display:flex;align-items:center;gap:8px">'
+          +'<div class="badge b'+l.routineId+'" style="width:30px;height:30px;font-size:11px">'+l.routineId+'</div>'
+          +'<div><div style="font-size:14px;font-weight:600">'+l.routineType+(l.outcome?' <span style="font-size:13px">'+({strong:"\uD83D\uDCAA",average:"\uD83D\uDE10",low:"\uD83D\uDE34"}[l.outcome]||"")+'</span>':'')+'</div>'
+          +'<div style="font-size:11px;color:var(--text3)">'+fdate(l.date)+(l.loadReduced?' &middot; <span style="color:var(--gold)">modified</span>':'')+'</div></div>'
+        +'</div>'
+        +'<div style="text-align:right">'
+          +'<div style="font-size:14px;font-weight:600">'+tot+' sets</div>'
+          +(vol>0?'<div style="font-size:11px;color:var(--text2)">'+Math.round(vol).toLocaleString()+'kg vol</div>':'')
+        +'</div>'
+      +'</div>'
+      +l.exercises.map(e=>'<div class="hex">'
+        +e.name+(e.swapped?'<span style="font-size:10px;color:var(--blue);background:#001a2e;padding:1px 6px;border-radius:10px;margin-left:5px">swapped</span>':'')
+        +(e.swapped&&e.originalName?'<span style="font-size:10px;color:var(--text3);margin-left:4px">from '+e.originalName+'</span>':'')
+        +'<div style="margin-top:2px">'+e.sets.map(s=>'<span class="schip">'+s.kg+'kg x '+s.reps+(s.note?' &middot; '+s.note:'')+'</span>').join("")+'</div>'
+      +'</div>').join("")
+    +'</div>';
+  }).join("");
+  return '<div class="phead"><h1>History</h1><p>'+S.logs.length+' sessions logged</p></div><div class="pad">'+cards+'</div>';
+}
+
+function renderBackupStatus(){
+  const days=getLastBackupDays();
+  const autoDate=localStorage.getItem("gl3_autobak_date");
+  const autoDays=autoDate?Math.floor((new Date()-new Date(autoDate))/86400000):null;
+  let color="var(--green)", msg="", sub="";
+  if(days===null){
+    color="var(--red)"; msg="No backup yet"; sub="Export your data now to protect your progress";
+  } else if(days===0){
+    color="var(--green)"; msg="Backed up today"; sub="Your data is safe";
+  } else if(days<=7){
+    color="var(--gold)"; msg="Last backup: "+days+" day"+(days===1?"":"s")+" ago"; sub="Next Sunday backup reminder is set";
+  } else {
+    color="var(--red)"; msg="Last backup: "+days+" days ago"; sub="Overdue — export your data now";
+  }
+  const autoMsg=autoDays!==null
+    ?"Auto-save: "+(autoDays===0?"today":autoDays+" day"+(autoDays===1?"":"s")+" ago")
+    :"No auto-save yet";
+  return '<div style="background:var(--bg3);border-radius:8px;padding:10px 12px;margin-bottom:12px;border-left:3px solid '+color+'">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center">'
+      +'<div>'
+        +'<div style="font-size:13px;font-weight:600;color:'+color+'">'+msg+'</div>'
+        +'<div style="font-size:11px;color:var(--text3);margin-top:2px">'+sub+'</div>'
+      +'</div>'
+      +'<div style="font-size:10px;color:var(--text3);text-align:right">'+autoMsg+'</div>'
+    +'</div>'
+  +'</div>';
+}
+
+function renderProgress(){
+  if(!S.logs.length) return '<div class="phead"><h1>Progress</h1><p>Track your gains</p></div><div class="empty">No data yet.<br>Log a few sessions to see progress.</div>';
+  const vol=S.logs.reduce((a,l)=>a+l.exercises.reduce((b,e)=>b+e.sets.reduce((c,s)=>c+(parseFloat(s.kg)||0)*(parseFloat(s.reps)||0),0),0),0);
+  const str=streak();
+  const cnt={}; R.forEach(r=>cnt[r.id]=0); S.logs.forEach(l=>{if(cnt[l.routineId]!==undefined)cnt[l.routineId]++;});
+  const maxC=Math.max(...Object.values(cnt),1);
+  // Collect all unique exercise names from logs
+  const exNames=[...new Set(S.logs.flatMap(l=>l.exercises.map(e=>e.name)))];
+  const pbs=exNames.map(n=>({n,pb:getPB(n)})).filter(x=>x.pb>0).sort((a,b)=>b.pb-a.pb);
+  // Deduplicate PBs by alias pool so swapped exercises don't show twice
+  const seenPools=new Set();
+  const dedupedPbs=pbs.filter(x=>{
+    const pool=new Set([x.n]);
+    if(SWAPS[x.n]) SWAPS[x.n].forEach(sw=>pool.add(sw.name));
+    Object.keys(SWAPS).forEach(orig=>{ SWAPS[orig].forEach(sw=>{ if(sw.name===x.n) pool.add(orig); }); });
+    const key=[...pool].sort().join("|");
+    if(seenPools.has(key)) return false;
+    seenPools.add(key); return true;
+  });
+  return '<div class="phead"><h1>Progress</h1><p>Personal bests &amp; volume</p></div>'
+    +'<div class="pad">'
+    +'<div class="srow">'
+      +'<div class="sbox"><div class="sval">'+S.logs.length+'</div><div class="slbl2">Sessions</div></div>'
+      +'<div class="sbox"><div class="sval">'+str+'</div><div class="slbl2">Streak</div></div>'
+      +'<div class="sbox"><div class="sval">'+(vol>0?Math.round(vol/1000)+'t':'--')+'</div><div class="slbl2">Total vol</div></div>'
+    +'</div>'
+    +'<div style="font-size:13px;font-weight:600;margin-bottom:10px">Routine frequency</div>'
+    +R.map(r=>'<div style="margin-bottom:12px">'
+      +'<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">'
+        +'<span><span class="ptag pt'+r.id+'" style="margin-right:6px">'+r.id+'</span>'+r.type+'</span>'
+        +'<span style="color:var(--text2)">'+cnt[r.id]+'x</span>'
+      +'</div>'
+      +'<div class="fbar-bg"><div class="fbar" style="width:'+Math.round(cnt[r.id]/maxC*100)+'%;background:'+ACC[r.id]+'"></div></div>'
+    +'</div>').join("")
+    +'<div style="height:1px;background:var(--border);margin:14px 0"></div>'
+    +'<div style="font-size:13px;font-weight:600;margin-bottom:4px">Personal bests</div>'
+    +'<div style="font-size:12px;color:var(--text2);margin-bottom:12px">Heaviest weight logged — aliases pooled across swaps</div>'
+    +(dedupedPbs.length?dedupedPbs.map(x=>'<div class="pbrow"><span>'+x.n+'</span><span style="font-weight:600;color:var(--green)">'+x.pb+'kg</span></div>').join(""):'<div style="font-size:13px;color:var(--text2)">Log weights to track PBs</div>')
+    +'<div style="height:1px;background:var(--border);margin:20px 0"></div>'
+    +'<div style="font-size:13px;font-weight:600;margin-bottom:4px">Data backup</div>'
+    +renderBackupStatus()
+    +'<div style="font-size:12px;color:var(--text2);margin-bottom:12px">Export weekly and save to iCloud to keep your data safe</div>'
+    +'<button onclick="exportData()" style="width:100%;padding:14px;background:var(--blue);color:#000;border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px">Download Backup</button>'
+    +'<button onclick="importData()" style="width:100%;padding:14px;background:var(--bg2);color:var(--text2);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">Restore from Backup</button>'
+    +'<div style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.6">Backup includes all sessions and saved meals. Restoring merges with existing data so nothing is overwritten.</div>'
+    +'</div>';
+}
+
+function renderNutrition(){
+  const isBuild=nutMode==="build";
+  const rid=getTodayRid();
+  const target=NUT[nutMode][rid];
+  const totals=getFoodTotals();
+  const remain=target.cal-totals.cal;
+  const remainColor=remain<0?"var(--red)":remain<300?"var(--gold)":"var(--green)";
+  const days=[
+    {rid:"A",day:"Mon"},{rid:"B",day:"Tue"},{rid:"rest",day:"Wed"},
+    {rid:"C",day:"Thu"},{rid:"A2",day:"Fri"},{rid:"B2",day:"Sat"},{rid:"rest",day:"Sun"}
+  ];
+  const todayDay=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][new Date().getDay()];
+
+  if(nutView==="search"){
+    const savedChips=savedMeals.length
+      ?'<div class="stitle">Saved meals — tap to add</div><div style="margin-bottom:12px">'
+        +savedMeals.map((m,i)=>'<span class="saved-chip" onclick="addSavedMeal('+i+')">'+m.name+' &middot; '+m.cal+'kcal</span>').join("")
+        +'</div>'
+      :"";
+    return '<div class="back-row" onclick="setNutView(\'log\')">'
+        +'<span style="font-size:22px;color:var(--text2)">&#8249;</span>'
+        +'<h2>Search Food</h2></div>'
+      +'<div class="pad">'
+      +savedChips
+      +'<div class="stitle">Search nutrition</div>'
+      +'<div class="food-search-wrap">'
+        +'<input class="food-search-input" id="fq" type="text" placeholder="e.g. 200g grilled chicken breast..." inputmode="search">'
+        +'<div class="search-spinner" id="fspin"></div>'
+      +'</div>'
+      +'<div style="display:flex;gap:8px;margin-top:8px;align-items:center">'
+        +'<input id="fg" type="number" placeholder="g" inputmode="numeric" style="width:80px;text-align:center;padding:8px">'
+        +'<span style="font-size:12px;color:var(--text2)">grams (optional — overrides default serving)</span>'
+      +'</div>'
+      +'<button onclick="searchFood()" style="width:100%;margin-top:10px;padding:13px;background:var(--blue);color:#000;border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">Search</button>'
+      +'<div id="fres"></div>'
+      +'</div>';
+  }
+
+  if(nutView==="saved"){
+    return '<div class="back-row" onclick="setNutView(\'log\')">'
+        +'<span style="font-size:22px;color:var(--text2)">&#8249;</span>'
+        +'<h2>Saved Meals</h2></div>'
+      +'<div class="pad">'
+      +(savedMeals.length===0
+        ?'<div class="empty">No saved meals yet.<br>Search for food and tap Save to add.</div>'
+        :savedMeals.map((m,i)=>'<div class="card">'
+          +'<div style="display:flex;justify-content:space-between;align-items:center">'
+            +'<div style="font-size:14px;font-weight:600">'+m.name+'</div>'
+            +'<div style="font-size:18px;font-weight:700;color:var(--green)">'+m.cal+' kcal</div>'
+          +'</div>'
+          +'<div style="font-size:12px;color:var(--text2);margin-top:4px">'+m.p+'g P &middot; '+m.c+'g C &middot; '+m.f+'g F</div>'
+          +'<div style="display:flex;gap:8px;margin-top:10px">'
+            +'<button onclick="addSavedMeal('+i+')" style="flex:1;padding:9px;background:var(--green);color:#000;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Add to today</button>'
+            +'<button onclick="removeSavedMeal('+i+')" style="padding:9px 14px;background:var(--bg3);color:var(--red);border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;cursor:pointer">Remove</button>'
+          +'</div>'
+        +'</div>').join("")
+      )
+      +'</div>';
+  }
+
+  return '<div class="phead"><h1>Nutrition</h1><p>Carl &middot; 67.2kg &rarr; 70kg &middot; 4:30am training</p></div>'
+    +'<div class="pad">'
+    +'<div style="display:flex;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:4px;margin-bottom:14px">'
+      +'<button onclick="setNutMode(\'build\')" style="flex:1;padding:10px;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;background:'+(isBuild?"var(--green)":"transparent")+';color:'+(isBuild?"#000":"var(--text2)")+'">Build Muscle</button>'
+      +'<button onclick="setNutMode(\'cut\')" style="flex:1;padding:10px;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;background:'+(!isBuild?"var(--red)":"transparent")+';color:'+(!isBuild?"#fff":"var(--text2)")+'">Cut</button>'
+    +'</div>'
+    +'<div class="card" style="margin-bottom:12px;border-color:'+(remain<0?"var(--red)":"var(--border)")+'">'
+      +'<div style="text-align:center;padding:6px 0 12px">'
+        +'<div style="font-size:10px;letter-spacing:1px;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Today &middot; '+(rid==="rest"?"Rest Day":"Routine "+rid)+' &middot; '+target.note+'</div>'
+        +'<div style="font-size:46px;font-weight:700;color:'+(remain<0?"var(--red)":"var(--text)")+'">'+totals.cal.toLocaleString()+'</div>'
+        +'<div style="font-size:12px;color:var(--text2)">of '+target.cal.toLocaleString()+' kcal target</div>'
+        +'<div style="font-size:14px;font-weight:600;color:'+remainColor+';margin-top:6px">'+(remain<0?"Over by "+Math.abs(remain)+" kcal":remain+" kcal remaining")+'</div>'
+        +'<div style="height:6px;background:var(--border);border-radius:3px;margin:10px 0 0">'
+          +'<div style="height:6px;border-radius:3px;background:'+(remain<0?"var(--red)":"var(--green)")+';width:'+Math.min(100,Math.round(totals.cal/target.cal*100))+'%;transition:width .3s"></div>'
+        +'</div>'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">'
+        +'<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center">'
+          +'<div style="font-size:20px;font-weight:700;color:var(--blue)">'+totals.p+'g</div>'
+          +'<div style="font-size:10px;color:var(--text2)">of '+target.p+'g protein</div>'
+          +mbar(totals.p,target.p,"var(--blue)")
+        +'</div>'
+        +'<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center">'
+          +'<div style="font-size:20px;font-weight:700;color:var(--gold)">'+totals.c+'g</div>'
+          +'<div style="font-size:10px;color:var(--text2)">of '+target.c+'g carbs</div>'
+          +mbar(totals.c,target.c,"var(--gold)")
+        +'</div>'
+        +'<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center">'
+          +'<div style="font-size:20px;font-weight:700;color:var(--red)">'+totals.f+'g</div>'
+          +'<div style="font-size:10px;color:var(--text2)">of '+target.f+'g fat</div>'
+          +mbar(totals.f,target.f,"var(--red)")
+        +'</div>'
+      +'</div>'
+    +'</div>'
+    +'<div style="display:flex;gap:8px;margin-bottom:14px">'
+      +'<button onclick="setNutView(\'search\')" style="flex:1;padding:12px;background:var(--blue);color:#000;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">+ Search and Add Food</button>'
+      +'<button onclick="setNutView(\'saved\')" style="flex:0 0 auto;padding:12px 14px;background:var(--bg2);color:var(--text2);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;cursor:pointer">Saved</button>'
+    +'</div>'
+    +(foodLog.length>0
+      ?'<div class="stitle">Today\'s food log</div>'
+        +'<div class="card" style="padding:8px 14px">'
+        +foodLog.map((f,i)=>'<div class="food-log-item">'
+          +'<div style="flex:1;min-width:0">'
+            +'<div style="font-size:13px;font-weight:500">'+f.name+'</div>'
+            +'<div style="font-size:11px;color:var(--text3)">'+f.p+'g P &middot; '+f.c+'g C &middot; '+f.f+'g F</div>'
+          +'</div>'
+          +'<div style="font-size:14px;font-weight:600;color:var(--text2);margin:0 8px">'+f.cal+' kcal</div>'
+          +'<button class="fdel" onclick="removeFoodItem('+i+')">&#215;</button>'
+        +'</div>').join("")
+        +'</div>'
+      :'<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">No food logged yet.<br>Tap Search to add your first meal.</div>'
+    )
+    +'<div class="info-box blue" style="margin-top:12px">'
+      +'<div style="font-size:12px;font-weight:600;color:var(--blue);margin-bottom:6px">4:30am training &mdash; meal timing</div>'
+      +'<div style="font-size:12px;color:var(--text2);line-height:1.9">'
+        +'&middot; <b>4:00&ndash;4:15am</b> &mdash; Optional: banana or black coffee only<br>'
+        +'&middot; <b>Post-session</b> &mdash; 40&ndash;50g whey protein shake immediately<br>'
+        +'&middot; <b>7:00&ndash;8:00am</b> &mdash; Full breakfast, biggest carb meal of day<br>'
+        +'&middot; <b>12:00pm</b> &mdash; Lunch with protein focus<br>'
+        +'&middot; <b>3:00&ndash;4:00pm</b> &mdash; Snack: protein + carbs<br>'
+        +'&middot; <b>6:30&ndash;7:30pm</b> &mdash; Dinner &mdash; fuels overnight recovery'
+      +'</div>'
+    +'</div>'
+    +'<div class="stitle" style="margin-top:14px">Weekly targets</div>'
+    +'<div class="card" style="padding:8px 14px">'
+    +days.map(d=>{
+      const nd=NUT[nutMode][d.rid];
+      const isToday=d.day===todayDay;
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)">'
+        +'<div style="display:flex;align-items:center;gap:8px">'
+          +'<div style="font-size:11px;color:var(--text3);width:28px">'+d.day+'</div>'
+          +(d.rid!=="rest"?'<span class="ptag pt'+d.rid+'" style="font-size:10px">'+d.rid+'</span>':'<span style="font-size:11px;color:var(--text3)">Rest</span>')
+        +'</div>'
+        +'<div style="text-align:right">'
+          +'<div style="font-size:'+(isToday?"14px":"13px")+';font-weight:'+(isToday?"700":"400")+';color:'+(isToday?"var(--text)":"var(--text2)")+'">'+nd.cal.toLocaleString()+' kcal</div>'
+          +'<div style="font-size:10px;color:var(--text3)">'+nd.p+'g P &middot; '+nd.c+'g C &middot; '+nd.f+'g F</div>'
+        +'</div>'
+      +'</div>';
+    }).join("")
+    +'</div>'
+    +'</div>';
+}
+
+// ── BACKUP AND RESTORE ──
+function exportData(){
+  try{
+    const backup={version:1,exportDate:new Date().toISOString(),logs:S.logs,savedMeals:savedMeals};
+    const json=JSON.stringify(backup,null,2);
+    const blob=new Blob([json],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    const date=new Date().toLocaleDateString('en-AU',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'-');
+    a.href=url; a.download='gymlog-backup-'+date+'.json';
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+    localStorage.setItem('gl3_lastexport', new Date().toISOString());
+    toast('Backup downloaded!');
+  }catch(e){ toast('Export failed'); }
+}
+
+function importData(){
+  const input=document.createElement('input');
+  input.type='file'; input.accept='.json';
+  input.onchange=function(e){
+    const file=e.target.files[0]; if(!file) return;
+    const reader=new FileReader();
+    reader.onload=function(ev){
+      try{
+        const backup=JSON.parse(ev.target.result);
+        if(!backup.logs||!Array.isArray(backup.logs)) throw new Error('Invalid');
+        const d=new Date(backup.exportDate).toLocaleDateString('en-AU');
+        if(!confirm('Restore '+backup.logs.length+' sessions from '+d+'? This will merge with your existing data.')) return;
+        const existing=new Set(S.logs.map(l=>l.id));
+        const newLogs=backup.logs.filter(l=>!existing.has(l.id));
+        S.logs=[...S.logs,...newLogs].sort((a,b)=>new Date(b.date)-new Date(a.date));
+        if(backup.savedMeals&&Array.isArray(backup.savedMeals)){
+          const em=new Set(savedMeals.map(m=>m.name));
+          backup.savedMeals.filter(m=>!em.has(m.name)).forEach(m=>savedMeals.push(m));
+          saveSavedMeals();
+        }
+        saveWorkouts();
+        toast('Restored '+newLogs.length+' new sessions!');
+        render();
+      }catch(err){ toast('Invalid backup file'); }
+    };
+    reader.readAsText(file);
+  };
+  document.body.appendChild(input); input.click(); document.body.removeChild(input);
+}
+
+// ── TESTS ──
+function runTests(){
+  let pass=0,fail=0;
+  function assert(label,val,expected){
+    if(JSON.stringify(val)===JSON.stringify(expected)){
+      console.log("✅ "+label);pass++;
+    } else {
+      console.error("❌ "+label+" | got:",val,"| expected:",expected);fail++;
+    }
+  }
+
+  // Test 1: SWAPS object has correct number of entries — still 34 unique routine
+  // exercises. Seated Calf Raise added to C+C2; Super Pendulum Squat dropped from
+  // C2 into the Hack Squat swap pool (net zero on key count). Standing Calf Raise
+  // is a swap option under Seated Calf Raise, not a routine exercise.
+  assert("SWAPS covers all 34 unique exercises", Object.keys(SWAPS).length, 34);
+
+  // Test 2: All routine exercises have swap entries
+  const missing=[];
+  R.forEach(r=>r.ex.forEach(e=>{ if(!SWAPS[e.n]) missing.push(e.n); }));
+  assert("All routine exercises have swap entries", missing, []);
+
+  // Test 3: getPB with alias pool — swapped exercise shares PB
+  const fakeLogs=[{
+    id:1,routineId:"A",routineType:"Chest + Back",date:"2025-01-01",
+    exercises:[{name:"Barbell Bench Press",muscle:"Chest",swapped:true,originalName:"Machine Bench Press",
+      sets:[{kg:"80",reps:"10",note:"",done:true}]}]
+  }];
+  const origLogs=S.logs;
+  S.logs=fakeLogs;
+  // PB for the original name should find the swap's logged weight
+  const pb=getPB("Machine Bench Press");
+  assert("getPB alias pool: original finds swapped weight", pb, 80);
+  // PB for the swapped name should also find it
+  const pb2=getPB("Barbell Bench Press");
+  assert("getPB alias pool: swapped name finds own weight", pb2, 80);
+  S.logs=origLogs;
+
+  // Test 4: getActiveName with no swap returns original
+  S.session="A"; S.swaps={};
+  assert("getActiveName no swap returns original", getActiveName(0), "Machine Bench Press");
+
+  // Test 5: getActiveName after swap returns swapped name
+  S.swaps={0:{originalName:"Machine Bench Press",swappedName:"Barbell Bench Press"}};
+  assert("getActiveName with swap returns swapped", getActiveName(0), "Barbell Bench Press");
+  S.swaps={};S.session=null;
+
+  // Test 6: Swap options have valid type values
+  const validTypes=["same","angle","harder","easier"];
+  let badType=null;
+  Object.entries(SWAPS).forEach(([orig,opts])=>{
+    opts.forEach(o=>{ if(!validTypes.includes(o.type)) badType=orig+":"+o.name; });
+  });
+  assert("All swap options have valid type", badType, null);
+
+  // Test 7: No swap option duplicates its original (would cause infinite loop)
+  let selfRef=null;
+  Object.entries(SWAPS).forEach(([orig,opts])=>{
+    opts.forEach(o=>{ if(o.name===orig) selfRef=orig; });
+  });
+  assert("No swap option self-references original", selfRef, null);
+
+  // Test 8: deduplication in progress — simulate two logs with original and swap
+  const fakeLogs2=[
+    {id:2,routineId:"A",routineType:"Chest + Back",date:"2025-02-01",
+      exercises:[{name:"Machine Bench Press",muscle:"Chest",swapped:false,sets:[{kg:"70",reps:"10",note:"",done:true}]}]},
+    {id:3,routineId:"A",routineType:"Chest + Back",date:"2025-02-08",
+      exercises:[{name:"Barbell Bench Press",muscle:"Chest",swapped:true,originalName:"Machine Bench Press",sets:[{kg:"75",reps:"10",note:"",done:true}]}]},
+  ];
+  S.logs=fakeLogs2;
+  const pbOriginal=getPB("Machine Bench Press");
+  const pbSwapped=getPB("Barbell Bench Press");
+  assert("Alias pool PB: original name sees both logs best (75)", pbOriginal, 75);
+  assert("Alias pool PB: swapped name sees both logs best (75)", pbSwapped, 75);
+  S.logs=origLogs;
+
+  // Test 9: Seated Calf Raise is permanent in C+C2; Standing is not a default
+  ["C","C2"].forEach(rid=>{
+    const ex=R.find(x=>x.id===rid).ex;
+    assert(rid+": Seated Calf Raise is a default exercise", ex.some(e=>e.n==="Seated Calf Raise"), true);
+    assert(rid+": Standing Calf Raise is NOT a default exercise", ex.some(e=>e.n==="Standing Calf Raise"), false);
+  });
+
+  // Test 10: dropped exercises exist only in swap pools, not routines
+  assert("Pendulum not a default routine exercise", R.some(r=>r.ex.some(e=>e.n==="Super Pendulum Squat")), false);
+  assert("Pendulum is a Hack Squat swap option", (SWAPS["Hack Squat Machine"]||[]).map(s=>s.name).includes("Super Pendulum Squat"), true);
+  assert("Standing Calf Raise is a Seated Calf Raise swap option", (SWAPS["Seated Calf Raise"]||[]).map(s=>s.name).includes("Standing Calf Raise"), true);
+
+  // Test 11: alias pools keep PB continuity across the new swaps
+  const fakeLogs3=[{id:9,routineId:"C2",routineType:"Legs",date:"2025-03-01",exercises:[
+    {name:"Super Pendulum Squat",muscle:"Quads",swapped:true,originalName:"Hack Squat Machine",sets:[{kg:"120",reps:"8",note:"",done:true}]},
+    {name:"Standing Calf Raise",muscle:"Calves",swapped:true,originalName:"Seated Calf Raise",sets:[{kg:"60",reps:"15",note:"",done:true}]}
+  ]}];
+  S.logs=fakeLogs3;
+  assert("alias pool: Hack Squat PB sees Pendulum log (120)", getPB("Hack Squat Machine"), 120);
+  assert("alias pool: Seated Calf PB sees Standing log (60)", getPB("Seated Calf Raise"), 60);
+  assert("alias pool: Standing Calf pools via Seated (60)", getPB("Standing Calf Raise"), 60);
+  S.logs=origLogs;
+
+  // Test 12: calf is a dynamic superset mover; no leftover static ss tags
+  ["C","C2"].forEach(rid=>{
+    const ex=R.find(x=>x.id===rid).ex;
+    assert(rid+": Seated Calf Raise has ssMover flag", ex.some(e=>e.n==="Seated Calf Raise"&&e.ssMover===true), true);
+    assert(rid+": no leftover static ss tags", ex.some(e=>e.ss!==undefined), false);
+  });
+
+  // Test 13: routine defaults resolve (C → Hip Thrust, C2 → Thigh Abductor)
+  assert("SS default C is Hip Thrust", SS_DEFAULT["C"], "Hip Thrust");
+  assert("SS default C2 is Thigh Abductor", SS_DEFAULT["C2"], "Thigh Abductor");
+  ["C","C2"].forEach(rid=>{
+    const di=defaultSSIndex(rid);
+    assert(rid+": default partner index resolves", di!==null&&di>=0, true);
+    assert(rid+": default partner is "+SS_DEFAULT[rid], R.find(x=>x.id===rid).ex[di].n, SS_DEFAULT[rid]);
+  });
+
+  // Test 14: choosing Hip Thrust moves the calf directly after it and brackets them
+  {
+    const r=R.find(x=>x.id==="C");
+    const hip=r.ex.findIndex(e=>e.n==="Hip Thrust");
+    const calf=r.ex.findIndex(e=>e.n==="Seated Calf Raise");
+    S.session="C"; S.ssPartner=hip;
+    const L=ssLayout(r);
+    assert("C: calf sits immediately after Hip Thrust", L.order[L.order.indexOf(hip)+1], calf);
+    assert("C: pairWith is Hip Thrust", L.pairWith, hip);
+    assert("C: all exercises present exactly once", L.order.slice().sort((a,b)=>a-b).join(","), r.ex.map((_,i)=>i).join(","));
+  }
+
+  // Test 15: re-pointing to Leg Extensions moves the calf there instead
+  {
+    const r=R.find(x=>x.id==="C");
+    const ext=r.ex.findIndex(e=>e.n==="Leg Extensions");
+    const calf=r.ex.findIndex(e=>e.n==="Seated Calf Raise");
+    S.ssPartner=ext;
+    const L=ssLayout(r);
+    assert("C: calf follows Leg Extensions when chosen", L.order[L.order.indexOf(ext)+1], calf);
+  }
+
+  // Test 16: 'none' leaves the calf unpaired in its natural position
+  {
+    const r=R.find(x=>x.id==="C");
+    S.ssPartner=null;
+    const L=ssLayout(r);
+    assert("C: no bracket when none selected", L.pairWith, -1);
+    assert("C: order unchanged when unpaired", L.order.join(","), r.ex.map((_,i)=>i).join(","));
+  }
+  S.session=null; S.ssPartner=null;
+
+  // Test 17: readiness scoring & thresholds
+  assert("readiness 5+5 no soreness = full", computeReadiness(5,5,false).rec, "full");
+  assert("readiness 4+4 = full (score 8)", computeReadiness(4,4,false).rec, "full");
+  assert("readiness 4+4 sore = modified (score 6)", computeReadiness(4,4,true).rec, "modified");
+  assert("readiness 3+2 = modified (score 5)", computeReadiness(3,2,false).rec, "modified");
+  assert("readiness 2+2 = rest (score 4)", computeReadiness(2,2,false).rec, "rest");
+  assert("readiness 1+1 sore = rest, score floors at 0", computeReadiness(1,1,true).score, 0);
+
+  // Test 18: smart rest classification — compounds get 3m, isolation 90s
+  assert("Smith Machine Squat is compound", classifyRest("Smith Machine Squat").secs, 180);
+  assert("T-Bar Rows is compound", classifyRest("T-Bar Rows").secs, 180);
+  assert("Hip Thrust is compound", classifyRest("Hip Thrust").secs, 180);
+  assert("Romanian Deadlift (swap) is compound", classifyRest("Romanian Deadlift").secs, 180);
+  assert("Bulgarian Split Squat (swap) is compound", classifyRest("Bulgarian Split Squat").secs, 180);
+  assert("Leg Extensions is isolation", classifyRest("Leg Extensions").secs, 90);
+  assert("Dumbbell Lateral Raise is isolation", classifyRest("Dumbbell Lateral Raise").secs, 90);
+  assert("Cable Tri Ext is isolation", classifyRest("Cable Tri Ext").secs, 90);
+  assert("Rear Kick Back Machine is isolation", classifyRest("Rear Kick Back Machine").secs, 90);
+
+  // Test 19: reduced load range = −20% to −15%, 0.5kg rounding
+  assert("reducedRange 100kg", reducedRange(100), {lo:80,hi:85});
+  assert("reducedRange 62.5kg", reducedRange("62.5"), {lo:50,hi:53});
+  assert("reducedRange invalid input", reducedRange("abc"), null);
+
+  // Test 20: insights — Monday≡A confound merges into ONE insight, not two
+  {
+    const mk=(daysAgo,rid,outcome)=>({id:1000+daysAgo,routineId:rid,routineType:"x",date:new Date(Date.now()-daysAgo*86400000).toISOString(),outcome,exercises:[]});
+    // Build 6 sessions all on the same weekday & routine, 4 of them low
+    const offs=[0,7,14,21,28,35];
+    const fake=offs.map((d,i)=>mk(d,"A",i<4?"low":"average"));
+    S.logs=fake;
+    const ins=getInsights();
+    assert("confounded day/routine yields exactly 1 insight", ins.length, 1);
+    assert("insight flags low energy", ins[0].type, "low");
+    assert("insight label merges day and routine", ins[0].msg.indexOf("/")>=0, true);
+  }
+
+  // Test 21: insights need ≥6 tagged sessions and ≥4 per group
+  {
+    S.logs=[{id:1,routineId:"A",routineType:"x",date:new Date().toISOString(),outcome:"low",exercises:[]}];
+    assert("too few tagged sessions = no insights", getInsights(), []);
+  }
+  S.logs=origLogs;
+
+  console.log("── Tests complete: "+pass+" passed, "+fail+" failed ──");
+  return {pass,fail};
+}
+
+loadStorage();
+render();
+
+// Run tests silently on load (results in console)
+setTimeout(()=>{
+  const r=runTests();
+  if(r.fail>0) console.warn("Some tests failed — check console above");
+},500);
+</script>
+</body>
+</html>
